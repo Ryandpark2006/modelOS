@@ -44,6 +44,17 @@ public:
     //   -1   error (offset > size_in_bytes)
     virtual int64_t read(uint32_t offset, uint32_t n, char* buffer);
 
+    // Write "n" bytes from "buffer" starting at "offset".
+    // returns:
+    //   > 0  actual number of bytes written
+    //   -1   error
+    virtual int64_t write(uint32_t offset, uint32_t n, const char* buffer) {
+        return -1; // Default implementation returns error
+    }
+
+    // Sync any pending changes to the underlying device
+    virtual void sync() {}
+
     // Read min(n,size_in_bytes - offset) bytes starting at "offset" and
     //      put the results in "buffer".
     // returns:

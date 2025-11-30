@@ -466,3 +466,13 @@ uint32_t Node::entry_count() {
     return count;
 }
 
+
+int64_t Node::write(uint32_t offset, uint32_t n, const char* buffer) {
+    // STUB: To be implemented by Neil's group
+    // For now, return error or pretend to write if needed for testing
+    return -1; 
+}
+
+void Node::sync() {
+    // STUB: To be implemented by Neil's group
+}
