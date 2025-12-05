@@ -1,0 +1,135 @@
+/*
+    I used ChatGPT to help me understand the structure of the ELF file and how to properly load it into the virtual memory space
+    as I didn't know what bits to check and what certain values were in the file. One of the main usages I used with ChatGPT was in 
+    the creation of the debug statements as I ran into errors. 
+*/
+#include "elf.h"
+#include "debug.h"
+#include "shared.h"
+#include "threads.h"
+#include "vme.h"
+#include "vmm.h"
+#include "blocking_lock.h"
+#include "physmem.h"
+#include "libk.h"
+
+uint32_t ELF::load(StrongPtr<Node> file) {
+    ElfHeader hdr;
+
+    if (file->size_in_bytes() < sizeof(ElfHeader)) {
+        return 0;
+    }
+    
+    int64_t cnt = file->read_all(0, sizeof(ElfHeader), (char*)&hdr);
+    if (cnt != sizeof(ElfHeader)) {
+        return 0;
+    }
+    
+    if (hdr.magic0 != 0x7f || hdr.magic1 != 'E' || hdr.magic2 != 'L' || hdr.magic3 != 'F') {
+        return 0;
+    }
+
+    if (hdr.cls != 1 || hdr.machine != 3 || hdr.type != 2) {
+        return 0;
+    }
+
+    uint32_t hoff = hdr.phoff;
+
+    for (uint32_t i=0; i<hdr.phnum; i++) {
+        ProgramHeader phdr;
+        file->read(hoff,phdr);
+        hoff += hdr.phentsize;
+
+        if (phdr.type == 1) { 
+            uint32_t vaddr = phdr.vaddr;
+            uint32_t memsz = phdr.memsz;
+            uint32_t filesz = phdr.filesz;
+            uint32_t offset = phdr.offset;
+
+            Debug::printf("LOAD segment: vaddr=%x memsz=%x filesz=%x\n", vaddr, memsz, filesz);
+
+            // Skip LOAD segments outside our valid address range (e.g. GNU property notes)
+            if (vaddr < 0x80000000 || vaddr >= 0xF0000000) {
+                Debug::printf("Skipping segment outside range\n");
+                continue;
+            }
+
+            if (vaddr + memsz < vaddr || vaddr + memsz > 0xF0000000) {
+                Debug::printf("Skipping segment with overflow\n");
+                continue;
+            }
+
+            auto tcb = impl::threads::state.current();
+            if (tcb == nullptr) {
+                Debug::printf("TCB is null!\n");
+                return 0;
+            }
+            
+            Debug::printf("Creating VME for segment\n");
+            
+            uint64_t va_start = uint64_t(vaddr & ~0xFFF);
+            uint64_t va_end = uint64_t((vaddr + memsz + 0xFFF) & ~0xFFF);
+            
+            auto vme = new impl::vme::VME(va_start, va_end, file, offset, filesz);
+            
+            auto p = tcb->vmes.first;
+            while (p->next != nullptr && p->next->range_start < va_start) {
+                p = p->next;
+            }
+            
+            if (p->next != nullptr && va_end > p->next->range_start) {
+                delete vme;
+                return 0;
+            }
+            
+            vme->next = p->next;
+            p->next = vme;
+            
+        }
+    }
+    
+    auto tcb = impl::threads::state.current();
+    if (tcb != nullptr) {
+        uint64_t stack_top = 0xF0000000;
+        uint64_t stack_size = 8192;
+        uint64_t stack_bottom = stack_top - stack_size;
+        
+        auto stack_vme = new impl::vme::VME(stack_bottom, stack_top, StrongPtr<Node>(), 0, 0);
+        
+        auto p = tcb->vmes.first;
+        while (p->next != nullptr && p->next->range_start < stack_bottom) {
+            p = p->next;
+        }
+        
+        stack_vme->next = p->next;
+        p->next = stack_vme;
+        
+        using namespace PhysMem;
+        uint32_t stack_page_va = 0xEFFFF000;  
+        auto frame = alloc_frame();
+        bzero((void*)frame, FRAME_SIZE);
+        
+        uint32_t esp_offset = 0xEFFFFFF0 - stack_page_va;
+        uint32_t* stack_loc = (uint32_t*)(frame + esp_offset);
+        
+        char* init_str = (char*)(frame + 0x00);  
+        uint32_t* argv_array = (uint32_t*)(frame + 0x20);  
+        
+        init_str[0] = 'i';
+        init_str[1] = 'n';
+        init_str[2] = 'i';
+        init_str[3] = 't';
+        init_str[4] = '\0';
+        
+        argv_array[0] = stack_page_va + 0x00;
+        argv_array[1] = 0;
+        
+        stack_loc[0] = 1;
+        stack_loc[1] = stack_page_va + 0x20;
+        
+        impl::VMM::map(tcb->pd, stack_page_va, frame, 7);
+        
+    }
+
+    return hdr.entry;
+}

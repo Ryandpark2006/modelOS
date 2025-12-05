@@ -1,0 +1,19 @@
+*** P8 Syscall Test Starting
+*** Test 1: getpid=1, getppid=0
+*** Test 2: stat(/hello) success - size=13, mode=0x81a4
+*** Test 3: fstat(fd=3) success - size=13
+*** Test 4: getcwd=/
+*** Test 5: chdir(/etc) success, new cwd=/etc
+*** Test 6: initial_brk=0xc0000000, sbrk_result=0xc0000000, new_brk=0xc0001000
+*** Test 7: gettimeofday success - sec=0, usec=0
+*** Test 8: sleeping for 1 second...
+*** Test 8: nanosleep returned rc=0
+*** Test 9: getdents(/) returned 136 bytes
+***   Entry: . (ino=2)
+***   Entry: .. (ino=2)
+***   Entry: hello (ino=12)
+***   Entry: goodbye (ino=13)
+***   Entry: fortunes (ino=14)
+***   Total entries: 8
+*** P8 Syscall Test Complete
+

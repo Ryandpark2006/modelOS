@@ -1,0 +1,22 @@
+*** Testing new P8 syscalls
+*** Test 1: getpid=1, getppid=0
+*** Test 2: getcwd=/
+*** Test 3: stat(/) size=1024 mode=16877
+*** Test 4: fstat(1) mode=8592
+*** Test 5: lstat(/) size=1024
+*** Test 6: getdents(/) read 1024 bytes
+*** Test 6: first entry: .
+*** Test 7: initial brk=0x80402500
+*** Test 7: sbrk(4096) returned 0x80402500
+*** Test 7: final brk=0x80403500 (grew by 4096)
+*** Test 8: gettimeofday sec=0 usec=0
+*** Test 9: sleeping for 1 second...
+*** Test 9: nanosleep completed
+*** Test 10: after sleep sec=1 usec=0
+*** Test 11: mkdir returned -1 (expected -1)
+*** Test 12: rmdir returned -1 (expected -1)
+*** Test 13: unlink returned -1 (expected -1)
+*** Test 14: rename returned -1 (expected -1)
+*** Test 15: mprotect returned -1 (expected -1)
+*** All tests completed
+
