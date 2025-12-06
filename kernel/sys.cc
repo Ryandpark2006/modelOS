@@ -89,7 +89,7 @@ static inline uint32_t get_arg(uint32_t *frame, int n) {
 }
 
 extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
-    // Debug::printf("sysHandler: eax=%d\n", eax);
+    Debug::printf("sysHandler: syscall #%d\n", eax);
     
     switch (eax) {
     case 0: /* exit */
