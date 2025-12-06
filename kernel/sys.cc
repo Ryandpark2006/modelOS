@@ -15,6 +15,7 @@
 #include "elf.h"
 #include "semaphore.h"
 #include "atomic.h"
+#include "pit.h"
 
 #define MAX_FDS 256
 struct FileDescriptor {
@@ -61,11 +62,17 @@ public:
     UserProcessTCB* waiting_parent;
     StrongPtr<Node> cwd;  
     bool has_parent_list;
+    uint32_t program_break;  // For brk() syscall
+    char cwd_path[256];      // For getcwd() syscall
     
     UserProcessTCB(uint32_t* pd, int pid) 
         : TCB(pd), pid(pid), parent_thread(nullptr), first_child(nullptr), 
           next_sibling(nullptr), state(PROC_RUNNING), exit_status(0), 
-          waiting_parent(nullptr), cwd(nullptr), has_parent_list(false) {}
+          waiting_parent(nullptr), cwd(nullptr), has_parent_list(false),
+          program_break(0) {
+        cwd_path[0] = '/';
+        cwd_path[1] = '\0';
+    }
     
     void doit() override {
         Debug::panic("UserProcessTCB::doit() called");
@@ -82,6 +89,7 @@ static inline uint32_t get_arg(uint32_t *frame, int n) {
 }
 
 extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
+    Debug::printf("sysHandler: syscall #%d\n", eax);
     
     switch (eax) {
     case 0: /* exit */
@@ -888,6 +896,467 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
     {
         Debug::printf("*** I'm a teapot\n");
         return 0;
+    }
+    
+    // ========== NEW P8 SYSCALLS ==========
+    
+    case 20: // getpid - Get process ID
+    {
+        using namespace impl::threads;
+        auto current_tcb = state.current();
+        if (current_tcb == nullptr) {
+            return -1;
+        }
+        auto current = static_cast<UserProcessTCB*>(current_tcb);
+        return current->pid;
+    }
+    
+    case 64: // getppid - Get parent process ID
+    {
+        using namespace impl::threads;
+        auto current_tcb = state.current();
+        if (current_tcb == nullptr) {
+            return -1;
+        }
+        auto current = static_cast<UserProcessTCB*>(current_tcb);
+        if (current->parent_thread == nullptr) {
+            return 0;  // No parent
+        }
+        // Find parent's PID
+        for (int i = 0; i < MAX_PROCESSES; i++) {
+            if (pid_to_process[i] != nullptr && 
+                (impl::threads::TCB*)pid_to_process[i] == current->parent_thread) {
+                return pid_to_process[i]->pid;
+            }
+        }
+        return 0;
+    }
+    
+    case 106: // stat - Get file status by path
+    {
+        using namespace impl::threads;
+        
+        const char* path = (const char*)get_arg(frame, 0);
+        void* statbuf = (void*)get_arg(frame, 1);
+        
+        if (path == nullptr || statbuf == nullptr) {
+            return -1;
+        }
+        
+        if (global_fs == nullptr) {
+            auto d = StrongPtr<Ide>::make(1,0);
+            global_fs = StrongPtr<Ext2>::make(d);
+        }
+        
+        StrongPtr<Node> start_dir = global_fs->root;
+        auto current_tcb = state.current();
+        if (current_tcb != nullptr) {
+            auto current = static_cast<UserProcessTCB*>(current_tcb);
+            if (current->cwd != nullptr && path[0] != '/') {
+                start_dir = current->cwd;
+            }
+        }
+        
+        auto node = global_fs->find(start_dir, path);
+        if (node == nullptr) {
+            return -1;
+        }
+        
+        // Fill in stat structure
+        struct stat_struct {
+            uint32_t st_dev;
+            uint32_t st_ino;
+            uint16_t st_mode;
+            uint16_t st_nlink;
+            uint16_t st_uid;
+            uint16_t st_gid;
+            uint32_t st_rdev;
+            uint32_t st_size;
+            uint32_t st_blksize;
+            uint32_t st_blocks;
+            uint32_t st_atime;
+            uint32_t st_mtime;
+            uint32_t st_ctime;
+        };
+        
+        stat_struct* st = (stat_struct*)statbuf;
+        st->st_dev = 0;
+        st->st_ino = node->number;
+        st->st_mode = node->get_type();
+        st->st_nlink = node->n_links();
+        st->st_uid = 0;
+        st->st_gid = 0;
+        st->st_rdev = 0;
+        st->st_size = node->size_in_bytes();
+        st->st_blksize = 4096;
+        st->st_blocks = (node->size_in_bytes() + 511) / 512;
+        st->st_atime = 0;
+        st->st_mtime = 0;
+        st->st_ctime = 0;
+        
+        return 0;
+    }
+    
+    case 108: // fstat - Get file status by file descriptor
+    {
+        int fd = (int)get_arg(frame, 0);
+        void* statbuf = (void*)get_arg(frame, 1);
+        
+        if (statbuf == nullptr) {
+            return -1;
+        }
+        
+        if (fd < 0 || fd >= MAX_FDS || !fd_table[fd].in_use) {
+            return -1;
+        }
+        
+        auto node = fd_table[fd].node;
+        if (node == nullptr) {
+            return -1;
+        }
+        
+        struct stat_struct {
+            uint32_t st_dev;
+            uint32_t st_ino;
+            uint16_t st_mode;
+            uint16_t st_nlink;
+            uint16_t st_uid;
+            uint16_t st_gid;
+            uint32_t st_rdev;
+            uint32_t st_size;
+            uint32_t st_blksize;
+            uint32_t st_blocks;
+            uint32_t st_atime;
+            uint32_t st_mtime;
+            uint32_t st_ctime;
+        };
+        
+        stat_struct* st = (stat_struct*)statbuf;
+        st->st_dev = 0;
+        st->st_ino = node->number;
+        st->st_mode = node->get_type();
+        st->st_nlink = node->n_links();
+        st->st_uid = 0;
+        st->st_gid = 0;
+        st->st_rdev = 0;
+        st->st_size = node->size_in_bytes();
+        st->st_blksize = 4096;
+        st->st_blocks = (node->size_in_bytes() + 511) / 512;
+        st->st_atime = 0;
+        st->st_mtime = 0;
+        st->st_ctime = 0;
+        
+        return 0;
+    }
+    
+    case 107: // lstat - Get file status (no symlink follow)
+    {
+        // For now, same as stat since we don't have symlinks
+        using namespace impl::threads;
+        
+        const char* path = (const char*)get_arg(frame, 0);
+        void* statbuf = (void*)get_arg(frame, 1);
+        
+        if (path == nullptr || statbuf == nullptr) {
+            return -1;
+        }
+        
+        if (global_fs == nullptr) {
+            auto d = StrongPtr<Ide>::make(1,0);
+            global_fs = StrongPtr<Ext2>::make(d);
+        }
+        
+        StrongPtr<Node> start_dir = global_fs->root;
+        auto current_tcb = state.current();
+        if (current_tcb != nullptr) {
+            auto current = static_cast<UserProcessTCB*>(current_tcb);
+            if (current->cwd != nullptr && path[0] != '/') {
+                start_dir = current->cwd;
+            }
+        }
+        
+        auto node = global_fs->find(start_dir, path);
+        if (node == nullptr) {
+            return -1;
+        }
+        
+        struct stat_struct {
+            uint32_t st_dev;
+            uint32_t st_ino;
+            uint16_t st_mode;
+            uint16_t st_nlink;
+            uint16_t st_uid;
+            uint16_t st_gid;
+            uint32_t st_rdev;
+            uint32_t st_size;
+            uint32_t st_blksize;
+            uint32_t st_blocks;
+            uint32_t st_atime;
+            uint32_t st_mtime;
+            uint32_t st_ctime;
+        };
+        
+        stat_struct* st = (stat_struct*)statbuf;
+        st->st_dev = 0;
+        st->st_ino = node->number;
+        st->st_mode = node->get_type();
+        st->st_nlink = node->n_links();
+        st->st_uid = 0;
+        st->st_gid = 0;
+        st->st_rdev = 0;
+        st->st_size = node->size_in_bytes();
+        st->st_blksize = 4096;
+        st->st_blocks = (node->size_in_bytes() + 511) / 512;
+        st->st_atime = 0;
+        st->st_mtime = 0;
+        st->st_ctime = 0;
+        
+        return 0;
+    }
+    
+    case 141: // getdents - Get directory entries
+    {
+        int fd = (int)get_arg(frame, 0);
+        void* dirp = (void*)get_arg(frame, 1);
+        uint32_t count = get_arg(frame, 2);
+        
+        if (dirp == nullptr || count == 0) {
+            return -1;
+        }
+        
+        if (fd < 0 || fd >= MAX_FDS || !fd_table[fd].in_use) {
+            return -1;
+        }
+        
+        auto node = fd_table[fd].node;
+        if (node == nullptr || !node->is_dir()) {
+            return -1;
+        }
+        
+        struct linux_dirent {
+            uint32_t d_ino;
+            uint32_t d_off;
+            uint16_t d_reclen;
+            char d_name[256];
+        };
+        
+        char* buf = (char*)dirp;
+        uint32_t bytes_written = 0;
+        uint32_t entry_index = fd_table[fd].offset;
+        
+        // Read directory entries using read_all
+        uint32_t dir_size = node->size_in_bytes();
+        char* dir_data = new char[dir_size];
+        int64_t read_result = node->read_all(0, dir_size, dir_data);
+        
+        if (read_result <= 0) {
+            delete[] dir_data;
+            return -1;
+        }
+        
+        // Parse ext2 directory entries
+        uint32_t offset = 0;
+        uint32_t current_entry = 0;
+        
+        while (offset < dir_size && bytes_written < count) {
+            struct ext2_dir_entry {
+                uint32_t inode;
+                uint16_t rec_len;
+                uint8_t name_len;
+                uint8_t file_type;
+                char name[255];
+            } __attribute__((packed));
+            
+            ext2_dir_entry* ext2_entry = (ext2_dir_entry*)(dir_data + offset);
+            
+            if (ext2_entry->inode == 0 || ext2_entry->rec_len == 0) {
+                break;
+            }
+            
+            // Skip entries until we reach the current offset
+            if (current_entry >= entry_index) {
+                uint32_t name_len = ext2_entry->name_len;
+                uint32_t reclen = sizeof(uint32_t) * 2 + sizeof(uint16_t) + name_len + 1;
+                reclen = (reclen + 3) & ~3;  // Align to 4 bytes
+                
+                if (bytes_written + reclen > count) {
+                    break;
+                }
+                
+                linux_dirent* d = (linux_dirent*)(buf + bytes_written);
+                d->d_ino = ext2_entry->inode;
+                d->d_off = current_entry + 1;
+                d->d_reclen = reclen;
+                
+                for (uint32_t i = 0; i < name_len; i++) {
+                    d->d_name[i] = ext2_entry->name[i];
+                }
+                d->d_name[name_len] = '\0';
+                
+                bytes_written += reclen;
+            }
+            
+            offset += ext2_entry->rec_len;
+            current_entry++;
+        }
+        
+        delete[] dir_data;
+        
+        fd_table[fd].offset = entry_index;
+        
+        return bytes_written;
+    }
+    
+    case 183: // getcwd - Get current working directory
+    {
+        using namespace impl::threads;
+        
+        char* buf = (char*)get_arg(frame, 0);
+        uint32_t size = get_arg(frame, 1);
+        
+        if (buf == nullptr || size == 0) {
+            return -1;
+        }
+        
+        auto current_tcb = state.current();
+        if (current_tcb == nullptr) {
+            return -1;
+        }
+        auto current = static_cast<UserProcessTCB*>(current_tcb);
+        
+        // Copy cwd_path to user buffer
+        uint32_t i = 0;
+        while (current->cwd_path[i] != '\0' && i < size - 1) {
+            buf[i] = current->cwd_path[i];
+            i++;
+        }
+        buf[i] = '\0';
+        
+        return (int)buf;  // Return pointer to buf
+    }
+    
+    case 45: // brk - Set program break
+    {
+        using namespace impl::threads;
+        
+        uint32_t new_brk = get_arg(frame, 0);
+        
+        auto current_tcb = state.current();
+        if (current_tcb == nullptr) {
+            return -1;
+        }
+        auto current = static_cast<UserProcessTCB*>(current_tcb);
+        
+        // If new_brk is 0, return current break
+        if (new_brk == 0) {
+            return current->program_break;
+        }
+        
+        // For now, just update the break point
+        // In a full implementation, you'd allocate/deallocate pages
+        current->program_break = new_brk;
+        
+        return 0;  // Success
+    }
+    
+    case 78: // gettimeofday - Get time of day
+    {
+        void* tv = (void*)get_arg(frame, 0);
+        
+        if (tv == nullptr) {
+            return -1;
+        }
+        
+        struct timeval {
+            uint32_t tv_sec;
+            uint32_t tv_usec;
+        };
+        
+        timeval* time_ptr = (timeval*)tv;
+        
+        // Use Pit for time
+        uint32_t current_seconds = Pit::seconds();
+        time_ptr->tv_sec = current_seconds;
+        // Calculate microseconds from the jiffy remainder
+        // Assuming 1000 jiffies per second (1 ms resolution), convert to microseconds
+        time_ptr->tv_usec = (Pit::jiffies % Pit::secondsToJiffies(1)) * 1000;
+        
+        return 0;
+    }
+    
+    case 162: // nanosleep - Sleep with nanosecond precision
+    {
+        void* req = (void*)get_arg(frame, 0);
+        
+        if (req == nullptr) {
+            return -1;
+        }
+        
+        struct timespec {
+            uint32_t tv_sec;
+            uint32_t tv_nsec;
+        };
+        
+        timespec* ts = (timespec*)req;
+        
+        // For now, just sleep for the seconds part
+        if (ts->tv_sec > 0) {
+            ::sleep(ts->tv_sec);
+        }
+        
+        return 0;
+    }
+    
+    case 125: // mprotect - Change memory protection
+    {
+        // For now, this is a stub - just return success
+        // In a full implementation, you'd modify page table entries
+        // to change read/write/execute permissions
+        
+        // TODO: Actually modify page table entries based on prot flags
+        // PROT_READ = 1, PROT_WRITE = 2, PROT_EXEC = 4
+        
+        return 0;  // Success (stub)
+    }
+    
+    case 39: // mkdir - Create directory
+    {
+        const char* pathname = (const char*)get_arg(frame, 0);
+        
+        if (pathname == nullptr) {
+            return -1;
+        }
+        
+        // TODO: Implement Ext2 directory creation
+        Debug::printf("mkdir: not yet implemented (requires Ext2 write support)\n");
+        return -1;  // Not implemented
+    }
+    
+    case 40: // rmdir - Remove directory
+    {
+        const char* pathname = (const char*)get_arg(frame, 0);
+        
+        if (pathname == nullptr) {
+            return -1;
+        }
+        
+        // TODO: Implement Ext2 directory removal
+        Debug::printf("rmdir: not yet implemented (requires Ext2 write support)\n");
+        return -1;  // Not implemented
+    }
+    
+    case 38: // rename - Rename/move file or directory
+    {
+        const char* oldpath = (const char*)get_arg(frame, 0);
+        const char* newpath = (const char*)get_arg(frame, 1);
+        
+        if (oldpath == nullptr || newpath == nullptr) {
+            return -1;
+        }
+        
+        // TODO: Implement Ext2 rename
+        Debug::printf("rename: not yet implemented (requires Ext2 write support)\n");
+        return -1;  // Not implemented
     }
 
     case 90: // mmap (old_mmap)

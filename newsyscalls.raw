@@ -1,0 +1,54 @@
+c[?7l[2J[0mSeaBIOS (version rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org)
+
+
+iPXE (http://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+06FD0FC0+06F30FC0 CA00
+Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
+
+
+Booting from Hard Disk..xxxxxxx.
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+| What just happened? Why am I here?
+| Discovering my identity and features
+|     CPUID: AuthenticAMD
+|     has SSE3
+|     has MONITOR/MWAIT
+|     running on hypervisor
+| totalProcs 4
+| memSize 0x7fe0000 127MB
+| localAPIC fee00000
+| ioAPIC fec00000
+| heap range 0x100000 0x600000
+| switched to new UART
+| physical range 0x600000 0x7fe0000
+| pitInit freq 1000Hz
+| pitInit divider 59659
+| APIT running at 1000061036Hz
+| APIT counter=1000061 for 1000Hz
+| initialize 1
+| reset 1
+|      eip:0x8000
+| initialize 2
+| reset 2
+|      eip:0x8000
+| initializing TSS:ss0 for 1
+| initialize 3
+| 1 enabling interrupts, I'm scared
+| reset 3
+|      eip:0x8000
+| initializing TSS:ss0 for 2
+| 2 enabling interrupts, I'm scared
+| initializing TSS:ss0 for 3
+| initializing TSS:ss0 for 0
+| 3 enabling interrupts, I'm scared
+| 0 enabling interrupts, I'm scared
+loading init
+ELF::load: phnum=2
+ELF::load: phdr[0] type=1 vaddr=80000000 memsz=402500
+ELF::load: creating VME va_start=80000000 va_end=80403000 offset=80 filesz=24d8
+ELF::load: phdr[1] type=1685382481 vaddr=0 memsz=0
+entry 80000506
+user esp effffff0
+about to switchToUser, entry=80000506 esp=effffff0
+vmm_pageFault: va=0x80000506
+map_it: looking for VME for va=0x80000000
+map_it: found VME range_start=0x80000000 range_end=0x80403000

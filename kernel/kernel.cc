@@ -15,6 +15,11 @@ void kernelMain(void) {
     Debug::printf("loading init\n");
     uint32_t e = ELF::load(init);
     Debug::printf("entry %x\n",e);
+    
+    if (e == 0) {
+        Debug::panic("*** ELF::load returned 0 - failed to load init\n");
+    }
+    
     auto userEsp = 0xF0000000 - 16; // where did this come from
     Debug::printf("user esp %x\n",userEsp);
     // Current state:

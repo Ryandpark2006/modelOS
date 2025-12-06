@@ -1,0 +1,182 @@
+c[?7l[2J[0mSeaBIOS (version rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org)
+
+
+iPXE (http://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+06FD0FC0+06F30FC0 CA00
+Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
+
+
+Booting from Hard Disk..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+| What just happened? Why am I here?
+| Discovering my identity and features
+|     CPUID: AuthenticAMD
+|     has SSE3
+|     has MONITOR/MWAIT
+|     running on hypervisor
+| totalProcs 1
+| memSize 0x7fe0000 127MB
+| localAPIC fee00000
+| ioAPIC fec00000
+| heap range 0x100000 0x600000
+| switched to new UART
+| physical range 0x600000 0x7fe0000
+| pitInit freq 1000Hz
+| pitInit divider 59659
+| APIT running at 1000048881Hz
+| APIT counter=1000048 for 1000Hz
+| initializing TSS:ss0 for 0
+| 0 enabling interrupts, I'm scared
+loading init
+entry 80000615
+user esp effffff0
+vmm_pageFault: va=0x80000615 eip=0x80000615
+map_it: looking for VME for va=0x80000000
+map_it: found VME, mapping...
+map_it: mapped va=0x80000000 to frame=0x626000
+vmm_pageFault: returning to eip=0x80000615
+vmm_pageFault: va=0x800029e0 eip=0x8000099e
+map_it: looking for VME for va=0x80002000
+map_it: found VME, mapping...
+map_it: mapped va=0x80002000 to frame=0x628000
+vmm_pageFault: returning to eip=0x8000099e
+vmm_pageFault: va=0x804029d4 eip=0x800009c2
+map_it: looking for VME for va=0x80402000
+map_it: found VME, mapping...
+map_it: mapped va=0x80402000 to frame=0x629000
+vmm_pageFault: returning to eip=0x800009c2
+vmm_pageFault: va=0x80001a92 eip=0x8000067a
+map_it: looking for VME for va=0x80001000
+map_it: found VME, mapping...
+map_it: mapped va=0x80001000 to frame=0x62b000
+vmm_pageFault: returning to eip=0x8000067a
+*** starting elf validation
+| argc = 1
+| argv[0] = init
+| === Test 1: Valid ELF execution ===
+| Inspecting ELF header of: /sbin/shell
+| File descriptor: 3
+| File length: 36684 bytes
+| Read 52 bytes from ELF header
+| Magic bytes: 0x7f 0x45 0x4c 0x46
+| Test: Valid ELF - /sbin/shell
+| Parent waiting for child (pid=2)
+| Child attempting to exec: /sbin/shell
+| Child exited with status=1, wait_rc=0
+| === Test 2: Non-existent file ===
+| Test: Non-existent file
+| Parent waiting for child (pid=3)
+| Child attempting to exec: /sbin/nonexistent
+| execl failed with rc=-1 (expected for invalid ELF)
+| Child exited with status=1, wait_rc=0
+| === Test 3: Non-ELF file (text) ===
+| Inspecting ELF header of: /etc/data.txt
+| File descriptor: 3
+| File length: 43 bytes
+| Read 43 bytes from ELF header
+| Magic bytes: 0x2a 0x2a 0x2a 0x20
+| Test: Non-ELF text file
+| Parent waiting for child (pid=4)
+| Child attempting to exec: /etc/data.txt
+| Child exited with status=1, wait_rc=0
+| === Test 4: Another non-ELF file ===
+| Inspecting ELF header of: /hello
+| File descriptor: 4
+| File length: 23 bytes
+| Read 23 bytes from ELF header
+| Magic bytes: 0x2a 0x2a 0x2a 0x20
+| Test: Text file /hello
+| Parent waiting for child (pid=5)
+| Child attempting to exec: /hello
+| Child exited with status=1, wait_rc=0
+| === Test 5: Multiple invalid exec attempts ===
+| Iteration 0
+| Test: Rapid test iteration
+| Parent waiting for child (pid=| Child attempting to exec: /goodbye
+6)
+| Child exited with status=1, wait_rc=0
+| Iteration 1
+| Test: Rapid test iteration
+| Parent waiting for child (pid=7)
+| Child attempting to exec: /goodbye
+| Child exited with status=1, wait_rc=0
+| Iteration 2
+| Test: Rapid test iteration
+| Parent waiting for child (pid=8)
+| Child attempting to exec: /goodbye
+| Child exited with status=1, wait_rc=0
+| === Test 6: Exec after file inspection ===
+| Opened /sbin/shell with fd=4
+| Read some bytes, now closing and attempting exec
+| Test: Exec after file inspection
+| Parent waiting for child (pid=| Child attempting to exec: /sbin/shell
+9)
+| Child exited with status=1, wait_rc=0
+| === Test 7: Wrong ELF class (64-bit) ===
+| Inspecting ELF header of: /data/wrong_class.elf
+| Failed to open file
+| Test: 64-bit ELF (class=2)
+| Parent waiting for child (pid=| Child attempting to exec: /data/wrong_class.elf
+10)
+| execl failed with rc=-1 (expected for invalid ELF)
+| Child exited with status=1, wait_rc=0
+| === Test 8: Wrong endianness ===
+| Inspecting ELF header of: /data/wrong_endian.elf
+| Failed to open file
+| Test: Big-endian ELF
+| Parent waiting for child (pid=11)
+| Child attempting to exec: /data/wrong_endian.elf
+| execl failed with rc=-1 (expected for invalid ELF)
+| Child exited with status=1, wait_rc=0
+| === Test 9: Relocatable ELF (not executable) ===
+| Inspecting ELF header of: /data/not_executable.elf
+| Failed to open file
+| Test: Relocatable ELF (type=1)
+| Parent waiting for child (pid=12)
+| Child attempting to exec: /data/not_executable.elf
+| execl failed with rc=-1 (expected for invalid ELF)
+| Child exited with status=1, wait_rc=0
+| === Test 10: Wrong architecture ===
+| Inspecting ELF header of: /data/wrong_arch.elf
+| Failed to open file
+| Test: ARM ELF (machine=40)
+| Parent waiting for child (pid=13)
+| Child attempting to exec: /data/wrong_arch.elf
+| execl failed with rc=-1 (expected for invalid ELF)
+| Child exited with status=1, wait_rc=0
+| === Test 11: Truncated ELF ===
+| Inspecting ELF header of: /data/truncated.elf
+| Failed to open file
+| Test: Truncated ELF (20 bytes)
+| Parent waiting for child (pid=14)
+| Child attempting to exec: /data/truncated.elf
+| execl failed with rc=-1 (expected for invalid ELF)
+| Child exited with status=1, wait_rc=0
+| === Test 12: All zeros file ===
+| Inspecting ELF header of: /data/all_zeros.elf
+| Failed to open file
+| Test: All zeros (no magic)
+| Parent waiting for child (pid=15)
+| Child attempting to exec: /data/all_zeros.elf
+| execl failed with rc=-1 (expected for invalid ELF)
+| Child exited with status=1, wait_rc=0
+| === Test 13: Plain text ===
+| Inspecting ELF header of: /data/not_elf.txt
+| Failed to open file
+| Test: Plain text file
+| Parent waiting for child (pid=16)
+| Child attempting to exec: /data/not_elf.txt
+| execl failed with rc=-1 (expected for invalid ELF)
+| Child exited with status=1, wait_rc=0
+| === Test 14: Directory (not a file) ===
+| Test: Directory instead of file
+| | Child attempting to exec: /data
+Parent waiting for child (pid=17)
+| Child exited with status=1, wait_rc=0
+| === Test 15: Empty/null path ===
+| Test: Empty path string
+| Parent| Child attempting to exec: 
+| execl failed with rc=- waiting for child (pid=18)
+1 (expected for invalid ELF)
+| Child exited with status=1, wait_rc=0
+*** done
+shutdown
