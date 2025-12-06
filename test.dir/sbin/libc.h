@@ -15,7 +15,6 @@ extern void* realloc(void* ptr, size_t newSize);
 
 void* memset(void* p, int val, size_t sz);
 void* memcpy(void* dest, void* src, size_t n);
-size_t strlen(const char* s);
 
 extern int putchar(int c);
 extern int puts(const char *p);

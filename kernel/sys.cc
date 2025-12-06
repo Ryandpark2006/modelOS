@@ -88,15 +88,29 @@ static inline uint32_t get_arg(uint32_t *frame, int n) {
     return user_stack[1 + n];
 }
 
+void sysInit(StrongPtr<Ext2> fs) {
+    // Just set the filesystem - TCB will be created on first fork
+    global_fs = fs;
+}
+
 extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
-    Debug::printf("sysHandler: syscall #%d\n", eax);
+    // Debug::printf("sysHandler: syscall #%d\n", eax);
     
     switch (eax) {
     case 0: /* exit */
     {
         using namespace impl::threads;
         
+        uint32_t *user_stack = (uint32_t*)(frame[3]);
+        Debug::printf("*** exit: ESP=0x%x\n", user_stack);
+        
+        // Try to read from different offsets
+        for (int i = 0; i < 10; i++) {
+            Debug::printf("  [ESP+%d] = 0x%x\n", i*4, user_stack[i]);
+        }
+        
         int rc = (int)get_arg(frame, 0);
+        Debug::printf("*** Process exiting with status %d (should be from ESP+8=user_stack[2])\n", rc);
         auto current_tcb = state.current();
         
         if (current_tcb == nullptr) {
@@ -908,10 +922,29 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
         using namespace impl::threads;
         auto current_tcb = state.current();
         if (current_tcb == nullptr) {
-            return -1;
+            // No thread - return PID 1 for init
+            Debug::printf("getpid: no TCB, returning 1\n");
+            return 1;
         }
-        auto current = static_cast<UserProcessTCB*>(current_tcb);
-        return current->pid;
+        
+        // Check if this is a UserProcessTCB by looking in pid_to_process table
+        UserProcessTCB* user_proc = nullptr;
+        for (int i = 0; i < MAX_PROCESSES; i++) {
+            if (pid_to_process[i] != nullptr && 
+                (impl::threads::TCB*)pid_to_process[i] == current_tcb) {
+                user_proc = pid_to_process[i];
+                break;
+            }
+        }
+        
+        if (user_proc != nullptr) {
+            Debug::printf("getpid: found user_proc, returning %d\n", user_proc->pid);
+            return user_proc->pid;
+        }
+        
+        // Not a user process (kernel thread) - return PID 1 for init
+        Debug::printf("getpid: not a user process, returning 1\n");
+        return 1;
     }
     
     case 64: // getppid - Get parent process ID

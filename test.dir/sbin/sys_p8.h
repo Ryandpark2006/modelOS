@@ -18,7 +18,7 @@ extern void exit(int rc);
 
 /* open */
 /* opens a file, returns file descriptor, flags is ignored */
-extern int open(const char* fn, int flags);
+extern int open(const char *fn, int flags);
 
 /* len */
 /* returns number of bytes in the file, negative indicates error or a console device */
@@ -26,11 +26,11 @@ extern ssize_t len(int fd);
 
 /* write */
 /* writes up to 'nbytes' to file, returns number of bytes written */
-extern ssize_t write(int fd, void* buf, size_t nbyte);
+extern ssize_t write(int fd, void *buf, size_t nbyte);
 
 /* read */
 /* reads up to nbytes from file, returns number of bytes read */
-extern ssize_t read(int fd, void* buf, size_t nbyte);
+extern ssize_t read(int fd, void *buf, size_t nbyte);
 
 /* create semaphore */
 /* returns semaphore descriptor */
@@ -76,6 +76,63 @@ extern int fork();
 /* returning indicates an error */
 /* arg0 is the name of the program by convention */
 /* a nullptr indicates end of arguments */
-extern int execl(const char* path, const char* arg0, ...);
+extern int execl(const char *path, const char *arg0, ...);
+
+extern int chdir(const char *path);
+
+extern int sleep(uint32_t seconds);
+
+/* P8 new syscalls */
+typedef int pid_t;
+typedef unsigned int mode_t;
+
+struct stat {
+    uint32_t st_dev;
+    uint32_t st_ino;
+    uint16_t st_mode;
+    uint16_t st_nlink;
+    uint16_t st_uid;
+    uint16_t st_gid;
+    uint32_t st_rdev;
+    uint32_t st_size;
+    uint32_t st_blksize;
+    uint32_t st_blocks;
+    uint32_t st_atime;
+    uint32_t st_mtime;
+    uint32_t st_ctime;
+};
+
+struct linux_dirent {
+    uint32_t d_ino;
+    uint32_t d_off;
+    uint16_t d_reclen;
+    char d_name[256];
+};
+
+struct timeval {
+    uint32_t tv_sec;
+    uint32_t tv_usec;
+};
+
+struct timespec {
+    uint32_t tv_sec;
+    uint32_t tv_nsec;
+};
+
+extern pid_t getpid(void);
+extern pid_t getppid(void);
+extern int stat(const char* path, struct stat* buf);
+extern int fstat(int fd, struct stat* buf);
+extern int lstat(const char* path, struct stat* buf);
+extern int getdents(int fd, struct linux_dirent* dirp, unsigned int count);
+extern char* getcwd(char* buf, size_t size);
+extern int mkdir(const char* path, mode_t mode);
+extern int rmdir(const char* path);
+extern int unlink(const char* path);
+extern int rename(const char* oldpath, const char* newpath);
+extern int brk(void* addr);
+extern int gettimeofday(struct timeval* tv, void* tz);
+extern int nanosleep(const struct timespec* req, struct timespec* rem);
+extern int mprotect(void* addr, size_t len, int prot);
 
 #endif

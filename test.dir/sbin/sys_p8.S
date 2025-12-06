@@ -136,100 +136,100 @@ getpid:
 	int $48
 	ret
 
-# pid_t getppid(void)
-.global getppid
+	# pid_t getppid(void)
+	.global getppid
 getppid:
-	mov $64,%eax
+	mov $21,%eax
 	int $48
 	ret
 
 	# int stat(const char* path, struct stat* buf)
 	.global stat
 stat:
-	mov $106,%eax
+	mov $22,%eax
 	int $48
 	ret
 
 	# int fstat(int fd, struct stat* buf)
 	.global fstat
 fstat:
-	mov $108,%eax
+	mov $23,%eax
 	int $48
 	ret
 
 	# int lstat(const char* path, struct stat* buf)
 	.global lstat
 lstat:
-	mov $107,%eax
+	mov $24,%eax
 	int $48
 	ret
 
 	# int getdents(int fd, struct linux_dirent* dirp, unsigned int count)
 	.global getdents
 getdents:
-	mov $141,%eax
+	mov $25,%eax
 	int $48
 	ret
 
 	# char* getcwd(char* buf, size_t size)
 	.global getcwd
 getcwd:
-	mov $183,%eax
+	mov $26,%eax
 	int $48
 	ret
 
 	# int mkdir(const char* path, mode_t mode)
 	.global mkdir
 mkdir:
-	mov $39,%eax
+	mov $27,%eax
 	int $48
 	ret
 
 	# int rmdir(const char* path)
 	.global rmdir
 rmdir:
-	mov $40,%eax
+	mov $28,%eax
 	int $48
 	ret
 
 	# int unlink(const char* path)
 	.global unlink
 unlink:
-	mov $87,%eax
+	mov $29,%eax
 	int $48
 	ret
 
 	# int rename(const char* oldpath, const char* newpath)
 	.global rename
 rename:
-	mov $38,%eax
+	mov $30,%eax
 	int $48
 	ret
 
 	# int brk(void* addr)
 	.global brk
 brk:
-	mov $45,%eax
+	mov $31,%eax
 	int $48
 	ret
 
 	# int gettimeofday(struct timeval* tv, void* tz)
 	.global gettimeofday
 gettimeofday:
-	mov $78,%eax
+	mov $32,%eax
 	int $48
 	ret
 
 	# int nanosleep(const struct timespec* req, struct timespec* rem)
 	.global nanosleep
 nanosleep:
-	mov $162,%eax
+	mov $33,%eax
 	int $48
 	ret
 
 	# int mprotect(void* addr, size_t len, int prot)
 	.global mprotect
 mprotect:
-	mov $125,%eax
+	mov $34,%eax
 	int $48
 	ret

@@ -1,0 +1,3 @@
+test_p8_syscalls:
+	/usr/bin/gcc -m32 -std=c99 -O2 -nostdlib -I. -c test_p8_syscalls.c crt0.S sys_p8.S libc_p8.c heap.c machine.S printf.c
+	/usr/bin/ld -N -m elf_i386 -e start -Ttext=0x80000000 -o test_p8_syscalls test_p8_syscalls.o crt0.o sys_p8.o libc_p8.o heap.o machine.o printf.o

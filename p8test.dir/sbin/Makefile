@@ -1,10 +1,10 @@
-UTILS = init
+UTILS = test_all_p8
 
-CFLAGS = -std=c99 -m32 -nostdlib -g -O2 -Wall -Werror -fno-builtin-strlen
+CFLAGS = -std=c99 -m32 -nostdlib -g -O2 -Wall -Werror -fno-builtin-strlen -fcf-protection=none
 
 all : $(UTILS)
 
-OFILES = sys.o crt0.o libc.o heap.o machine.o printf.o
+OFILES = sys.o crt0_simple.o machine.o
 
 # keep all files
 .SECONDARY :

@@ -1,5 +1,11 @@
 #include "libc.h"
 
+long strlen(const char* s) {
+    long i = 0;
+    while (s[i] != '\0') i++;
+    return i;
+}
+
 int putchar(int c) {
     char t = (char)c;
     return write(1,&t,1);
@@ -38,4 +44,17 @@ void cp(int from, int to) {
             ptr += m;
         }
     }
+}
+
+/* P8 additions */
+void* sbrk(intptr_t increment) {
+    void* current_break = (void*)brk(0);
+    if (increment == 0) {
+        return current_break;
+    }
+    void* new_break = (void*)brk((void*)((uint32_t)current_break + increment));
+    if (new_break == (void*)-1) {
+        return (void*)-1;
+    }
+    return current_break;
 }
