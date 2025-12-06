@@ -64,14 +64,22 @@ public:
     bool has_parent_list;
     uint32_t program_break;  // For brk() syscall
     char cwd_path[256];      // For getcwd() syscall
+    FilesystemOverlay* fs_overlay;  // Per-process filesystem modifications
     
     UserProcessTCB(uint32_t* pd, int pid) 
         : TCB(pd), pid(pid), parent_thread(nullptr), first_child(nullptr), 
           next_sibling(nullptr), state(PROC_RUNNING), exit_status(0), 
           waiting_parent(nullptr), cwd(nullptr), has_parent_list(false),
-          program_break(0) {
+          program_break(0), fs_overlay(nullptr) {
         cwd_path[0] = '/';
         cwd_path[1] = '\0';
+        fs_overlay = new FilesystemOverlay();
+    }
+    
+    ~UserProcessTCB() {
+        if (fs_overlay) {
+            delete fs_overlay;
+        }
     }
     
     void doit() override {
@@ -984,12 +992,68 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
             global_fs = StrongPtr<Ext2>::make(d);
         }
         
-        StrongPtr<Node> start_dir = global_fs->root;
+        // Get current process
         auto current_tcb = state.current();
+        UserProcessTCB* current = nullptr;
         if (current_tcb != nullptr) {
-            auto current = static_cast<UserProcessTCB*>(current_tcb);
-            if (current->cwd != nullptr && path[0] != '/') {
-                start_dir = current->cwd;
+            for (int i = 0; i < MAX_PROCESSES; i++) {
+                if (pid_to_process[i] != nullptr && 
+                    (impl::threads::TCB*)pid_to_process[i] == current_tcb) {
+                    current = pid_to_process[i];
+                    break;
+                }
+            }
+        }
+        
+        // Check if deleted in overlay
+        if (current && current->fs_overlay && current->fs_overlay->is_deleted(path)) {
+            return -1;  // File deleted
+        }
+        
+        // Check if exists in overlay
+        if (current && current->fs_overlay) {
+            FsModification* overlay_entry = current->fs_overlay->find_entry(path);
+            if (overlay_entry) {
+                // Return fake stat info for overlay entry
+                struct stat_struct {
+                    uint32_t st_dev;
+                    uint32_t st_ino;
+                    uint16_t st_mode;
+                    uint16_t st_nlink;
+                    uint16_t st_uid;
+                    uint16_t st_gid;
+                    uint32_t st_rdev;
+                    uint32_t st_size;
+                    uint32_t st_blksize;
+                    uint32_t st_blocks;
+                    uint32_t st_atime;
+                    uint32_t st_mtime;
+                    uint32_t st_ctime;
+                };
+                
+                stat_struct* st = (stat_struct*)statbuf;
+                st->st_dev = 0;
+                st->st_ino = overlay_entry->fake_inode;
+                st->st_mode = overlay_entry->mode;
+                st->st_nlink = 1;
+                st->st_uid = 0;
+                st->st_gid = 0;
+                st->st_rdev = 0;
+                st->st_size = overlay_entry->size;
+                st->st_blksize = 4096;
+                st->st_blocks = (overlay_entry->size + 511) / 512;
+                st->st_atime = 0;
+                st->st_mtime = 0;
+                st->st_ctime = 0;
+                return 0;  // Success
+            }
+        }
+        
+        StrongPtr<Node> start_dir = global_fs->root;
+        if (current_tcb != nullptr) {
+            auto current_proc = static_cast<UserProcessTCB*>(current_tcb);
+            if (current_proc->cwd != nullptr && path[0] != '/') {
+                start_dir = current_proc->cwd;
             }
         }
         
@@ -1102,12 +1166,68 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
             global_fs = StrongPtr<Ext2>::make(d);
         }
         
-        StrongPtr<Node> start_dir = global_fs->root;
+        // Get current process
         auto current_tcb = state.current();
+        UserProcessTCB* current = nullptr;
         if (current_tcb != nullptr) {
-            auto current = static_cast<UserProcessTCB*>(current_tcb);
-            if (current->cwd != nullptr && path[0] != '/') {
-                start_dir = current->cwd;
+            for (int i = 0; i < MAX_PROCESSES; i++) {
+                if (pid_to_process[i] != nullptr && 
+                    (impl::threads::TCB*)pid_to_process[i] == current_tcb) {
+                    current = pid_to_process[i];
+                    break;
+                }
+            }
+        }
+        
+        // Check if deleted in overlay
+        if (current && current->fs_overlay && current->fs_overlay->is_deleted(path)) {
+            return -1;  // File deleted
+        }
+        
+        // Check if exists in overlay
+        if (current && current->fs_overlay) {
+            FsModification* overlay_entry = current->fs_overlay->find_entry(path);
+            if (overlay_entry) {
+                // Return fake stat info for overlay entry
+                struct stat_struct {
+                    uint32_t st_dev;
+                    uint32_t st_ino;
+                    uint16_t st_mode;
+                    uint16_t st_nlink;
+                    uint16_t st_uid;
+                    uint16_t st_gid;
+                    uint32_t st_rdev;
+                    uint32_t st_size;
+                    uint32_t st_blksize;
+                    uint32_t st_blocks;
+                    uint32_t st_atime;
+                    uint32_t st_mtime;
+                    uint32_t st_ctime;
+                };
+                
+                stat_struct* st = (stat_struct*)statbuf;
+                st->st_dev = 0;
+                st->st_ino = overlay_entry->fake_inode;
+                st->st_mode = overlay_entry->mode;
+                st->st_nlink = 1;
+                st->st_uid = 0;
+                st->st_gid = 0;
+                st->st_rdev = 0;
+                st->st_size = overlay_entry->size;
+                st->st_blksize = 4096;
+                st->st_blocks = (overlay_entry->size + 511) / 512;
+                st->st_atime = 0;
+                st->st_mtime = 0;
+                st->st_ctime = 0;
+                return 0;  // Success
+            }
+        }
+        
+        StrongPtr<Node> start_dir = global_fs->root;
+        if (current_tcb != nullptr) {
+            auto current_proc = static_cast<UserProcessTCB*>(current_tcb);
+            if (current_proc->cwd != nullptr && path[0] != '/') {
+                start_dir = current_proc->cwd;
             }
         }
         
@@ -1357,32 +1477,185 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
     
     case 39: // mkdir - Create directory
     {
+        using namespace impl::threads;
         const char* pathname = (const char*)get_arg(frame, 0);
+        uint32_t mode = get_arg(frame, 1);
         
         if (pathname == nullptr) {
             return -1;
         }
         
-        // TODO: Implement Ext2 directory creation
-        Debug::printf("mkdir: not yet implemented (requires Ext2 write support)\n");
-        return -1;  // Not implemented
+        auto current_tcb = state.current();
+        if (current_tcb == nullptr) {
+            return -1;
+        }
+        
+        // Find the UserProcessTCB
+        UserProcessTCB* current = nullptr;
+        for (int i = 0; i < MAX_PROCESSES; i++) {
+            if (pid_to_process[i] != nullptr && 
+                (impl::threads::TCB*)pid_to_process[i] == current_tcb) {
+                current = pid_to_process[i];
+                break;
+            }
+        }
+        
+        if (current == nullptr || current->fs_overlay == nullptr) {
+            return -1;
+        }
+        
+        // Check if path already exists (in overlay or on disk)
+        if (current->fs_overlay->find_entry(pathname) != nullptr) {
+            return -1;  // Already exists
+        }
+        
+        // Try to find it in the real filesystem
+        StrongPtr<Node> start_dir = global_fs->root;
+        if (current->cwd != nullptr && pathname[0] != '/') {
+            start_dir = current->cwd;
+        }
+        StrongPtr<Node> existing = global_fs->find(start_dir, pathname);
+        if (existing != nullptr) {
+            return -1;  // Already exists on disk
+        }
+        
+        // Create directory in overlay
+        if (current->fs_overlay->create_directory(pathname, mode)) {
+            return 0;  // Success
+        }
+        
+        return -1;  // Failed
     }
     
     case 40: // rmdir - Remove directory
     {
+        using namespace impl::threads;
         const char* pathname = (const char*)get_arg(frame, 0);
         
         if (pathname == nullptr) {
             return -1;
         }
         
-        // TODO: Implement Ext2 directory removal
-        Debug::printf("rmdir: not yet implemented (requires Ext2 write support)\n");
-        return -1;  // Not implemented
+        auto current_tcb = state.current();
+        if (current_tcb == nullptr) {
+            return -1;
+        }
+        
+        // Find the UserProcessTCB
+        UserProcessTCB* current = nullptr;
+        for (int i = 0; i < MAX_PROCESSES; i++) {
+            if (pid_to_process[i] != nullptr && 
+                (impl::threads::TCB*)pid_to_process[i] == current_tcb) {
+                current = pid_to_process[i];
+                break;
+            }
+        }
+        
+        if (current == nullptr || current->fs_overlay == nullptr) {
+            return -1;
+        }
+        
+        // Check if already deleted
+        if (current->fs_overlay->is_deleted(pathname)) {
+            return -1;  // Already deleted
+        }
+        
+        // Check if exists (in overlay or on disk)
+        FsModification* overlay_entry = current->fs_overlay->find_entry(pathname);
+        
+        StrongPtr<Node> start_dir = global_fs->root;
+        if (current->cwd != nullptr && pathname[0] != '/') {
+            start_dir = current->cwd;
+        }
+        StrongPtr<Node> disk_node = global_fs->find(start_dir, pathname);
+        
+        if (overlay_entry == nullptr && disk_node == nullptr) {
+            return -1;  // Doesn't exist
+        }
+        
+        // Check if it's a directory
+        if (overlay_entry) {
+            if (overlay_entry->type != FsModification::CREATE_DIR) {
+                return -1;  // Not a directory
+            }
+        } else if (disk_node != nullptr && !disk_node->is_dir()) {
+            return -1;  // Not a directory
+        }
+        
+        // Delete directory in overlay
+        if (current->fs_overlay->delete_entry(pathname)) {
+            return 0;  // Success
+        }
+        
+        return -1;  // Failed
+    }
+    
+    case 87: // unlink - Delete file
+    {
+        using namespace impl::threads;
+        const char* pathname = (const char*)get_arg(frame, 0);
+        
+        if (pathname == nullptr) {
+            return -1;
+        }
+        
+        auto current_tcb = state.current();
+        if (current_tcb == nullptr) {
+            return -1;
+        }
+        
+        // Find the UserProcessTCB
+        UserProcessTCB* current = nullptr;
+        for (int i = 0; i < MAX_PROCESSES; i++) {
+            if (pid_to_process[i] != nullptr && 
+                (impl::threads::TCB*)pid_to_process[i] == current_tcb) {
+                current = pid_to_process[i];
+                break;
+            }
+        }
+        
+        if (current == nullptr || current->fs_overlay == nullptr) {
+            return -1;
+        }
+        
+        // Check if already deleted
+        if (current->fs_overlay->is_deleted(pathname)) {
+            return -1;  // Already deleted
+        }
+        
+        // Check if exists (in overlay or on disk)
+        FsModification* overlay_entry = current->fs_overlay->find_entry(pathname);
+        
+        StrongPtr<Node> start_dir = global_fs->root;
+        if (current->cwd != nullptr && pathname[0] != '/') {
+            start_dir = current->cwd;
+        }
+        StrongPtr<Node> disk_node = global_fs->find(start_dir, pathname);
+        
+        if (overlay_entry == nullptr && disk_node == nullptr) {
+            return -1;  // Doesn't exist
+        }
+        
+        // Check if it's NOT a directory
+        if (overlay_entry) {
+            if (overlay_entry->type == FsModification::CREATE_DIR) {
+                return -1;  // Is a directory, use rmdir
+            }
+        } else if (disk_node != nullptr && disk_node->is_dir()) {
+            return -1;  // Is a directory, use rmdir
+        }
+        
+        // Delete file in overlay
+        if (current->fs_overlay->delete_entry(pathname)) {
+            return 0;  // Success
+        }
+        
+        return -1;  // Failed
     }
     
     case 38: // rename - Rename/move file or directory
     {
+        using namespace impl::threads;
         const char* oldpath = (const char*)get_arg(frame, 0);
         const char* newpath = (const char*)get_arg(frame, 1);
         
@@ -1390,9 +1663,49 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
             return -1;
         }
         
-        // TODO: Implement Ext2 rename
-        Debug::printf("rename: not yet implemented (requires Ext2 write support)\n");
-        return -1;  // Not implemented
+        auto current_tcb = state.current();
+        if (current_tcb == nullptr) {
+            return -1;
+        }
+        
+        // Find the UserProcessTCB
+        UserProcessTCB* current = nullptr;
+        for (int i = 0; i < MAX_PROCESSES; i++) {
+            if (pid_to_process[i] != nullptr && 
+                (impl::threads::TCB*)pid_to_process[i] == current_tcb) {
+                current = pid_to_process[i];
+                break;
+            }
+        }
+        
+        if (current == nullptr || current->fs_overlay == nullptr) {
+            return -1;
+        }
+        
+        // Check if old path exists
+        FsModification* overlay_entry = current->fs_overlay->find_entry(oldpath);
+        
+        StrongPtr<Node> start_dir = global_fs->root;
+        if (current->cwd != nullptr && oldpath[0] != '/') {
+            start_dir = current->cwd;
+        }
+        StrongPtr<Node> disk_node = global_fs->find(start_dir, oldpath);
+        
+        if (overlay_entry == nullptr && disk_node == nullptr) {
+            return -1;  // Old path doesn't exist
+        }
+        
+        // Check if old path is deleted
+        if (current->fs_overlay->is_deleted(oldpath)) {
+            return -1;  // Old path deleted
+        }
+        
+        // Rename in overlay
+        if (current->fs_overlay->rename_entry(oldpath, newpath)) {
+            return 0;  // Success
+        }
+        
+        return -1;  // Failed
     }
 
     default:

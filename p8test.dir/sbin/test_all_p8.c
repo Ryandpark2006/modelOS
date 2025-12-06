@@ -133,6 +133,54 @@ int main() {
     print((ret == 0) ? "PASS\n" : "FAIL\n");
     
     print("*** ALL 15 SYSCALLS TESTED! ***\n");
+    
+    // Additional filesystem write tests
+    print("\n=== FILESYSTEM WRITE TESTS ===\n");
+    
+    // Test mkdir
+    print("| mkdir: ");
+    int mkdir_ret = mkdir("/testdir", 0755);
+    print_num(mkdir_ret);
+    print((mkdir_ret == 0) ? " PASS\n" : " FAIL\n");
+    
+    // Test stat on created dir
+    print("| stat(created): ");
+    struct stat st_new;
+    int stat_ret = stat("/testdir", &st_new);
+    print_num(stat_ret);
+    if (stat_ret == 0) {
+        print(" PASS (ino=");
+        print_num(st_new.st_ino);
+        print(")\n");
+    } else {
+        print(" FAIL\n");
+    }
+    
+    // Test rename
+    print("| rename: ");
+    int rename_ret = rename("/testdir", "/newdir");
+    print_num(rename_ret);
+    print((rename_ret == 0) ? " PASS\n" : " FAIL\n");
+    
+    // Test stat on renamed dir
+    print("| stat(renamed): ");
+    stat_ret = stat("/newdir", &st_new);
+    print_num(stat_ret);
+    print((stat_ret == 0) ? " PASS\n" : " FAIL\n");
+    
+    // Test rmdir
+    print("| rmdir: ");
+    int rmdir_ret = rmdir("/newdir");
+    print_num(rmdir_ret);
+    print((rmdir_ret == 0) ? " PASS\n" : " FAIL\n");
+    
+    // Test stat on deleted dir (should fail)
+    print("| stat(deleted): ");
+    stat_ret = stat("/newdir", &st_new);
+    print_num(stat_ret);
+    print((stat_ret == -1) ? " PASS (correctly failed)\n" : " FAIL\n");
+    
+    print("\n*** ALL TESTS COMPLETE! ***\n");
     shutdown();
     return 0;
 }
