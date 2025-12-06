@@ -27,7 +27,12 @@ public:
     
     // Read the given block into the given buffer. We assume the
     // buffer is big enough
-    void read_block(uint32_t block_number, char* buffer) override;
+    void read_block(uint32_t sector, char* buffer) override;
+    void write_block(uint32_t sector, const char* buffer) override;
+    
+    void writeSector(uint32_t sector, const void* buffer);
+    // int64_t write(uint32_t offset, uint32_t n, const char* buffer) override; // Use BlockIO::write
+    void sync() override {}
 
     // We lie because I'm too lazy to get the actual drive size
     // This means that we'll get QEMU errors if we try to access

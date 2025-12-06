@@ -62,6 +62,9 @@ public:
     }
 
     void read_block(uint32_t number, char* buffer) override;
+    void write_block(uint32_t number, const char* buffer) override;
+    void write_fs_block(uint32_t fs_block_num, const char* buffer);
+    void sync() override;
 
     inline uint16_t get_type() {
         return inode.i_mode;

@@ -466,3 +466,124 @@ uint32_t Node::entry_count() {
     return count;
 }
 
+
+void Node::write_block(uint32_t block_index, const char* buffer) {
+    uint32_t pointers_per_block = fs_block_size / 4;
+    uint32_t physical_block = 0;
+    
+    if (block_index < 12) {
+        physical_block = inode.i_block[block_index];
+    }
+    else if (block_index < 12 + pointers_per_block) {
+        uint32_t indirect_block = inode.i_block[12];
+        if (indirect_block == 0) {
+            physical_block = 0;
+        } else {
+            char* indirect_buffer = new char[fs_block_size];
+            read_fs_block(indirect_block, indirect_buffer);
+            uint32_t* pointers = (uint32_t*)indirect_buffer;
+            physical_block = pointers[block_index - 12];
+            delete[] indirect_buffer;
+        }
+    }
+    else if (block_index < 12 + pointers_per_block + (pointers_per_block * pointers_per_block)) {
+        uint32_t double_indirect_block = inode.i_block[13];
+        if (double_indirect_block == 0) {
+            physical_block = 0;
+        } else {
+            char* double_indirect_buffer = new char[fs_block_size];
+            read_fs_block(double_indirect_block, double_indirect_buffer);
+            uint32_t* double_pointers = (uint32_t*)double_indirect_buffer;
+            
+            uint32_t indirect_index = (block_index - 12 - pointers_per_block) / pointers_per_block;
+            uint32_t direct_index = (block_index - 12 - pointers_per_block) % pointers_per_block;
+            
+            uint32_t indirect_block = double_pointers[indirect_index];
+            delete[] double_indirect_buffer;
+            
+            if (indirect_block == 0) {
+                physical_block = 0;
+            } else {
+                char* indirect_buffer = new char[fs_block_size];
+                read_fs_block(indirect_block, indirect_buffer);
+                uint32_t* pointers = (uint32_t*)indirect_buffer;
+                physical_block = pointers[direct_index];
+                delete[] indirect_buffer;
+            }
+        }
+    }
+    else if (block_index < 12 + pointers_per_block + (pointers_per_block * pointers_per_block) + (pointers_per_block * pointers_per_block * pointers_per_block)) {
+        uint32_t triple_indirect_block = inode.i_block[14];
+        if (triple_indirect_block == 0) {
+            physical_block = 0;
+        } else {
+            char* triple_indirect_buffer = new char[fs_block_size];
+            read_fs_block(triple_indirect_block, triple_indirect_buffer);
+            uint32_t* triple_pointers = (uint32_t*)triple_indirect_buffer;
+            
+            uint32_t offset = block_index - 12 - pointers_per_block - (pointers_per_block * pointers_per_block);
+            uint32_t double_index = offset / (pointers_per_block * pointers_per_block);
+            uint32_t remaining = offset % (pointers_per_block * pointers_per_block);
+            uint32_t indirect_index = remaining / pointers_per_block;
+            uint32_t direct_index = remaining % pointers_per_block;
+            
+            uint32_t double_indirect_block = triple_pointers[double_index];
+            delete[] triple_indirect_buffer;
+            
+            if (double_indirect_block == 0) {
+                physical_block = 0;
+            } else {
+                char* double_indirect_buffer = new char[fs_block_size];
+                read_fs_block(double_indirect_block, double_indirect_buffer);
+                uint32_t* double_pointers = (uint32_t*)double_indirect_buffer;
+                uint32_t indirect_block = double_pointers[indirect_index];
+                delete[] double_indirect_buffer;
+                
+                if (indirect_block == 0) {
+                    physical_block = 0;
+                } else {
+                    char* indirect_buffer = new char[fs_block_size];
+                    read_fs_block(indirect_block, indirect_buffer);
+                    uint32_t* pointers = (uint32_t*)indirect_buffer;
+                    physical_block = pointers[direct_index];
+                    delete[] indirect_buffer;
+                }
+            }
+        }
+    }
+    else {
+        Debug::panic("Block index %d exceeds maximum file size!", block_index);
+    }
+    
+    if (physical_block == 0) {
+        // We do not support allocation yet.
+        // Debug::panic("Attempt to write to sparse block (allocation not implemented)");
+        // Or just return error? But this function returns void.
+        // For now, we ignore writes to sparse blocks or panic.
+        // Panic is safer to detect issues.
+        Debug::panic("Node::write_block: Attempt to write to unallocated block %d", block_index);
+    } else {
+        write_fs_block(physical_block, buffer);
+    }
+}
+
+void Node::write_fs_block(uint32_t fs_block_num, const char* buffer) {
+    // Write-through: Write to disk first
+    uint32_t byte_offset = fs_block_num * fs_block_size;
+    uint32_t sectors_per_block = fs_block_size / 512;
+    uint32_t start_sector = byte_offset / 512;
+    
+    for (uint32_t i = 0; i < sectors_per_block; i++) {
+        ide->write_block(start_sector + i, buffer + (i * 512));
+    }
+    
+    // Then update cache
+    if (cache) {
+        cache->write(fs_block_num, buffer);
+    }
+}
+
+void Node::sync() {
+    // Ide sync is empty, but if we had buffers we would flush them.
+    ide->sync();
+}

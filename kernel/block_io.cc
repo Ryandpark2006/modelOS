@@ -45,3 +45,30 @@ int64_t BlockIO::read_all(uint32_t offset, uint32_t n, char* buffer) {
     }
     return total_count;
 }
+
+int64_t BlockIO::write(uint32_t offset, uint32_t desired_n, const char* buffer) {
+    auto sz = size_in_bytes();
+    // For write, we might extend the file, but BlockIO assumes fixed size usually?
+    // Node overrides size_in_bytes, but for generic BlockIO (like disk), size is fixed.
+    // If offset > sz, error.
+    if (offset > sz) return -1;
+    if (offset == sz) return 0; // Cannot write past end unless we support extension here?
+    // Let's assume fixed size for now. Node can override write if it supports extension.
+    
+    auto n = K::min(desired_n, sz - offset);
+    auto block_number = offset / block_size;
+    auto offset_in_block = offset % block_size;
+    auto actual_n = K::min(block_size - offset_in_block, n);
+    
+    if (actual_n == block_size) {
+        ASSERT(offset_in_block == 0);
+        write_block(block_number, buffer);
+    } else {
+        char* temp = new char[block_size];
+        read_block(block_number, temp); // Read-modify-write
+        ::memcpy(&temp[offset_in_block], buffer, actual_n);
+        write_block(block_number, temp);
+        delete []temp;
+    }
+    return actual_n;
+}

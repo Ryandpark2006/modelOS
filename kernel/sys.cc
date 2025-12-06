@@ -124,30 +124,27 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
         return 0;
     }
     
+    case 4: // Linux write
     case 1:  // write 
     {
         int fd = (int)get_arg(frame, 0);
-        void* buf = (void*)get_arg(frame, 1);
+        const char* buf = (const char*)get_arg(frame, 1);
         uint32_t nbyte = get_arg(frame, 2);
         
         if (fd == 1 || fd == 2) {
-            char* str = (char*)buf;
             for (uint32_t i = 0; i < nbyte; i++) {
-                Debug::printf("%c", str[i]);
+                Debug::printf("%c", buf[i]);
             }
             return nbyte;
         }
         
         if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
             auto& fde = fd_table[fd];
-            uint32_t file_size = fde.node->size_in_bytes();
+            int64_t written = fde.node->write(fde.offset, nbyte, buf);
+            if (written < 0) return -1;
             
-            if (fde.offset > file_size) {
-                return -1;
-            }
-            
-            fde.offset += nbyte;
-            return nbyte;
+            fde.offset += written;
+            return written;
         }
         
         return -1;
@@ -891,6 +888,65 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
     {
         Debug::printf("*** I'm a teapot\n");
         return 0;
+    }
+
+    case 90: // mmap (old_mmap)
+    {
+        struct mmap_arg_struct {
+            uint32_t addr;
+            uint32_t len;
+            uint32_t prot;
+            uint32_t flags;
+            uint32_t fd;
+            uint32_t offset;
+        } *args = (struct mmap_arg_struct*)get_arg(frame, 0);
+        
+        if (args == nullptr) return -1;
+        
+        uint32_t len = args->len;
+        uint32_t flags = args->flags;
+        int fd = (int)args->fd;
+        uint32_t offset = args->offset;
+        
+        StrongPtr<Node> node;
+        if (!(flags & 0x20)) { // Not MAP_ANONYMOUS
+            if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
+                node = fd_table[fd].node;
+            } else {
+                return -1; // EBADF
+            }
+        }
+        
+        bool shared = (flags & 0x01); // MAP_SHARED
+        
+        void* ret = VMM::naive_mmap(len, shared, node, offset);
+        if (ret == nullptr) return -1; // ENOMEM
+        return (int)ret;
+    }
+
+    case 192: // mmap2
+    {
+        // uint32_t addr = get_arg(frame, 0); // Hint, ignored
+        uint32_t len = get_arg(frame, 1);
+        // uint32_t prot = get_arg(frame, 2);
+        uint32_t flags = get_arg(frame, 3);
+        int fd = (int)get_arg(frame, 4);
+        uint32_t pgoff = get_arg(frame, 5);
+        
+        StrongPtr<Node> node;
+        if (!(flags & 0x20)) { // Not MAP_ANONYMOUS
+            if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
+                node = fd_table[fd].node;
+            } else {
+                return -1; // EBADF
+            }
+        }
+        
+        bool shared = (flags & 0x01); // MAP_SHARED
+        
+        void* ret = VMM::naive_mmap(len, shared, node, pgoff * 4096);
+        if (ret == nullptr) return -1; // ENOMEM
+        return (int)ret;
     }
 
     default:
