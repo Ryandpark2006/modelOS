@@ -8,3 +8,4 @@ SECTIONS
   /DISCARD/ : { *(.note.gnu.property) *(.note.gnu.build-id) *(.note.ABI-tag) *(.gnu.hash) }
 }
 
+

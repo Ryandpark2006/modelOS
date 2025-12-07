@@ -101,6 +101,63 @@ public:
     uint32_t entry_count();
 };
 
+// Filesystem modification types for in-memory overlay
+struct FsModification {
+    enum Type { 
+        CREATE_DIR,     // Created directory
+        CREATE_FILE,    // Created file
+        DELETE,         // Deleted file/directory
+        RENAME          // Renamed file/directory
+    } type;
+    
+    char path[256];         // Original path
+    char new_path[256];     // New path (for RENAME)
+    uint32_t fake_inode;    // Fake inode number for created entries
+    uint32_t mode;          // File mode/permissions
+    uint32_t size;          // File size (for created files)
+    
+    FsModification() : type(CREATE_DIR), fake_inode(0), mode(0), size(0) {
+        path[0] = '\0';
+        new_path[0] = '\0';
+    }
+};
+
+// Per-process filesystem overlay for write operations
+class FilesystemOverlay {
+private:
+    FsModification* modifications;
+    uint32_t modification_count;
+    uint32_t modification_capacity;
+    uint32_t next_fake_inode;
+    
+public:
+    FilesystemOverlay();
+    ~FilesystemOverlay();
+    
+    // Check if a path has been deleted
+    bool is_deleted(const char* path);
+    
+    // Check if a path exists in the overlay (created or renamed to)
+    FsModification* find_entry(const char* path);
+    
+    // Get the effective path (after renames)
+    const char* resolve_path(const char* path, char* buffer);
+    
+    // Add a new modification
+    void add_modification(const FsModification& mod);
+    
+    // Create a directory
+    bool create_directory(const char* path, uint32_t mode);
+    
+    // Delete an entry
+    bool delete_entry(const char* path);
+    
+    // Rename an entry
+    bool rename_entry(const char* old_path, const char* new_path);
+    
+    // Get next fake inode number
+    uint32_t get_fake_inode() { return next_fake_inode++; }
+};
 
 class Ext2 {
 private: 

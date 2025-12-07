@@ -6,7 +6,5 @@ int main(int argc, char** argv) {
         printf("*** argv[%d]=%s\n",i,argv[i]);
     }
 
-    cp(3,1);
-
     return 666;
 }

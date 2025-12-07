@@ -7,9 +7,15 @@
 #include "config.h"
 #include "shared.h"
 
+extern void sysInit(StrongPtr<Ext2> fs);
+
 void kernelMain(void) {
     auto d = StrongPtr<Ide>::make(1,0);
     auto fs = StrongPtr<Ext2>::make(d);
+    
+    // Initialize syscall system with filesystem
+    sysInit(fs);
+    
     auto init = fs->find(fs->root, "/sbin/init");
     
     if (init == nullptr) {

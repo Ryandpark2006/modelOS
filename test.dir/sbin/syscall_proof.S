@@ -110,3 +110,4 @@ start:
     .section .rodata
 hello_path: .asciz "/hello"
 
+

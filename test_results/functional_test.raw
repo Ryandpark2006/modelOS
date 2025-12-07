@@ -1,0 +1,525 @@
+c[?7l[2J[0mSeaBIOS (version rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org)
+
+
+iPXE (http://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+06FD0FC0+06F30FC0 CA00
+Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
+
+
+Booting from Hard Disk..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+| What just happened? Why am I here?
+| Discovering my identity and features
+|     CPUID: AuthenticAMD
+|     has SSE3
+|     has MONITOR/MWAIT
+|     running on hypervisor
+| totalProcs 1
+| memSize 0x7fe0000 127MB
+| localAPIC fee00000
+| ioAPIC fec00000
+| heap range 0x100000 0x600000
+| switched to new UART
+| physical range 0x600000 0x7fe0000
+| pitInit freq 1000Hz
+| pitInit divider 59659
+| APIT running at 1000051102Hz
+| APIT counter=1000051 for 1000Hz
+| initializing TSS:ss0 for 0
+| 0 enabling interrupts, I'm scared
+loading init
+entry 800002dd
+user esp effffff0
+vmm_pageFault: va=0x800002dd eip=0x800002dd
+map_it: looking for VME for va=0x80000000
+map_it: found VME, mapping...
+map_it: mapped va=0x80000000 to frame=0x626000
+vmm_pageFault: returning to eip=0x800002dd
+vmm_pageFault: va=0x80001898 eip=0x800005eb
+map_it: looking for VME for va=0x80001000
+map_it: found VME, mapping...
+map_it: mapped va=0x80001000 to frame=0x628000
+vmm_pageFault: returning to eip=0x800005eb
+sysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+
+sysHandler: syscall #1
+ sysHandler: syscall #1
+ sysHandler: syscall #1
+PsysHandler: syscall #1
+8sysHandler: syscall #1
+ sysHandler: syscall #1
+SsysHandler: syscall #1
+YsysHandler: syscall #1
+SsysHandler: syscall #1
+CsysHandler: syscall #1
+AsysHandler: syscall #1
+LsysHandler: syscall #1
+LsysHandler: syscall #1
+ sysHandler: syscall #1
+FsysHandler: syscall #1
+UsysHandler: syscall #1
+NsysHandler: syscall #1
+CsysHandler: syscall #1
+TsysHandler: syscall #1
+IsysHandler: syscall #1
+OsysHandler: syscall #1
+NsysHandler: syscall #1
+AsysHandler: syscall #1
+LsysHandler: syscall #1
+ sysHandler: syscall #1
+TsysHandler: syscall #1
+EsysHandler: syscall #1
+SsysHandler: syscall #1
+TsysHandler: syscall #1
+
+sysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+‚sysHandler: syscall #1
+ïsysHandler: syscall #1
+êsysHandler: syscall #1
+
+sysHandler: syscall #1
+
+sysHandler: syscall #1
+TsysHandler: syscall #1
+esysHandler: syscall #1
+ssysHandler: syscall #1
+tsysHandler: syscall #1
+isysHandler: syscall #1
+nsysHandler: syscall #1
+gsysHandler: syscall #1
+ sysHandler: syscall #1
+gsysHandler: syscall #1
+esysHandler: syscall #1
+tsysHandler: syscall #1
+psysHandler: syscall #1
+isysHandler: syscall #1
+dsysHandler: syscall #1
+.sysHandler: syscall #1
+.sysHandler: syscall #1
+.sysHandler: syscall #1
+
+sysHandler: syscall #20
+sysHandler: syscall #1
+ sysHandler: syscall #1
+ sysHandler: syscall #1
+‚sysHandler: syscall #1
+úsysHandler: syscall #1
+ósysHandler: syscall #1
+ sysHandler: syscall #1
+gsysHandler: syscall #1
+esysHandler: syscall #1
+tsysHandler: syscall #1
+psysHandler: syscall #1
+isysHandler: syscall #1
+dsysHandler: syscall #1
+ sysHandler: syscall #1
+fsysHandler: syscall #1
+asysHandler: syscall #1
+isysHandler: syscall #1
+lsysHandler: syscall #1
+esysHandler: syscall #1
+dsysHandler: syscall #1
+
+sysHandler: syscall #1
+TsysHandler: syscall #1
+esysHandler: syscall #1
+ssysHandler: syscall #1
+tsysHandler: syscall #1
+isysHandler: syscall #1
+nsysHandler: syscall #1
+gsysHandler: syscall #1
+ sysHandler: syscall #1
+gsysHandler: syscall #1
+esysHandler: syscall #1
+tsysHandler: syscall #1
+psysHandler: syscall #1
+psysHandler: syscall #1
+isysHandler: syscall #1
+dsysHandler: syscall #1
+.sysHandler: syscall #1
+.sysHandler: syscall #1
+.sysHandler: syscall #1
+
+sysHandler: syscall #64
+sysHandler: syscall #1
+ sysHandler: syscall #1
+ sysHandler: syscall #1
+‚sysHandler: syscall #1
+úsysHandler: syscall #1
+ìsysHandler: syscall #1
+ sysHandler: syscall #1
+gsysHandler: syscall #1
+esysHandler: syscall #1
+tsysHandler: syscall #1
+psysHandler: syscall #1
+psysHandler: syscall #1
+isysHandler: syscall #1
+dsysHandler: syscall #1
+ sysHandler: syscall #1
+rsysHandler: syscall #1
+esysHandler: syscall #1
+tsysHandler: syscall #1
+usysHandler: syscall #1
+rsysHandler: syscall #1
+nsysHandler: syscall #1
+esysHandler: syscall #1
+dsysHandler: syscall #1
+ sysHandler: syscall #1
+vsysHandler: syscall #1
+asysHandler: syscall #1
+lsysHandler: syscall #1
+isysHandler: syscall #1
+dsysHandler: syscall #1
+ sysHandler: syscall #1
+PsysHandler: syscall #1
+PsysHandler: syscall #1
+IsysHandler: syscall #1
+DsysHandler: syscall #1
+
+sysHandler: syscall #1
+TsysHandler: syscall #1
+esysHandler: syscall #1
+ssysHandler: syscall #1
+tsysHandler: syscall #1
+isysHandler: syscall #1
+nsysHandler: syscall #1
+gsysHandler: syscall #1
+ sysHandler: syscall #1
+bsysHandler: syscall #1
+rsysHandler: syscall #1
+ksysHandler: syscall #1
+.sysHandler: syscall #1
+.sysHandler: syscall #1
+.sysHandler: syscall #1
+
+sysHandler: syscall #45
+sysHandler: syscall #1
+ sysHandler: syscall #1
+ sysHandler: syscall #1
+‚sysHandler: syscall #1
+úsysHandler: syscall #1
+ìsysHandler: syscall #1
+ sysHandler: syscall #1
+bsysHandler: syscall #1
+rsysHandler: syscall #1
+ksysHandler: syscall #1
+(sysHandler: syscall #1
+0sysHandler: syscall #1
+)sysHandler: syscall #1
+ sysHandler: syscall #1
+rsysHandler: syscall #1
+esysHandler: syscall #1
+tsysHandler: syscall #1
+usysHandler: syscall #1
+rsysHandler: syscall #1
+nsysHandler: syscall #1
+esysHandler: syscall #1
+dsysHandler: syscall #1
+ sysHandler: syscall #1
+csysHandler: syscall #1
+usysHandler: syscall #1
+rsysHandler: syscall #1
+rsysHandler: syscall #1
+esysHandler: syscall #1
+nsysHandler: syscall #1
+tsysHandler: syscall #1
+ sysHandler: syscall #1
+bsysHandler: syscall #1
+rsysHandler: syscall #1
+esysHandler: syscall #1
+asysHandler: syscall #1
+ksysHandler: syscall #1
+
+sysHandler: syscall #45
+sysHandler: syscall #45
+sysHandler: syscall #1
+ sysHandler: syscall #1
+ sysHandler: syscall #1
+‚sysHandler: syscall #1
+úsysHandler: syscall #1
+ìsysHandler: syscall #1
+ sysHandler: syscall #1
+ssysHandler: syscall #1
+bsysHandler: syscall #1
+rsysHandler: syscall #1
+ksysHandler: syscall #1
+(sysHandler: syscall #1
+4sysHandler: syscall #1
+0sysHandler: syscall #1
+9sysHandler: syscall #1
+6sysHandler: syscall #1
+)sysHandler: syscall #1
+ sysHandler: syscall #1
+esysHandler: syscall #1
+xsysHandler: syscall #1
+tsysHandler: syscall #1
+esysHandler: syscall #1
+nsysHandler: syscall #1
+dsysHandler: syscall #1
+esysHandler: syscall #1
+dsysHandler: syscall #1
+ sysHandler: syscall #1
+hsysHandler: syscall #1
+esysHandler: syscall #1
+asysHandler: syscall #1
+psysHandler: syscall #1
+
+sysHandler: syscall #1
+TsysHandler: syscall #1
+esysHandler: syscall #1
+ssysHandler: syscall #1
+tsysHandler: syscall #1
+isysHandler: syscall #1
+nsysHandler: syscall #1
+gsysHandler: syscall #1
+ sysHandler: syscall #1
+gsysHandler: syscall #1
+esysHandler: syscall #1
+tsysHandler: syscall #1
+tsysHandler: syscall #1
+isysHandler: syscall #1
+msysHandler: syscall #1
+esysHandler: syscall #1
+osysHandler: syscall #1
+fsysHandler: syscall #1
+dsysHandler: syscall #1
+asysHandler: syscall #1
+ysysHandler: syscall #1
+.sysHandler: syscall #1
+.sysHandler: syscall #1
+.sysHandler: syscall #1
+
+sysHandler: syscall #78
+vmm_pageFault: va=0x0 eip=0x80000142
+*** can't handle page fault at 0
+| processor 0 halting
