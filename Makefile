@@ -101,6 +101,12 @@ get_tests:
 	@echo "   Please don't add the all_tests directory to git"
 	@echo ""
 
+all_tests/syscall_test.dir/sbin/init: test_syscalls.cc linker.ld
+	g++ -m32 -static -nostdlib -fno-builtin -fno-rtti -fno-exceptions -no-pie -T linker.ld -o $@ $<
+
+all_tests/comprehensive_test.dir/sbin/init: test_comprehensive.cc linker.ld
+	g++ -m32 -static -nostdlib -fno-builtin -fno-rtti -fno-exceptions -no-pie -T linker.ld -o $@ $<
+
 get_results:
 	test -d my_results || git clone ${ORIGIN_REPO}_results my_results
 	(cd my_results ; git pull)

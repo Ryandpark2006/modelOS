@@ -556,11 +556,6 @@ void Node::write_block(uint32_t block_index, const char* buffer) {
     }
     
     if (physical_block == 0) {
-        // We do not support allocation yet.
-        // Debug::panic("Attempt to write to sparse block (allocation not implemented)");
-        // Or just return error? But this function returns void.
-        // For now, we ignore writes to sparse blocks or panic.
-        // Panic is safer to detect issues.
         Debug::panic("Node::write_block: Attempt to write to unallocated block %d", block_index);
     } else {
         write_fs_block(physical_block, buffer);
@@ -568,7 +563,6 @@ void Node::write_block(uint32_t block_index, const char* buffer) {
 }
 
 void Node::write_fs_block(uint32_t fs_block_num, const char* buffer) {
-    // Write-through: Write to disk first
     uint32_t byte_offset = fs_block_num * fs_block_size;
     uint32_t sectors_per_block = fs_block_size / 512;
     uint32_t start_sector = byte_offset / 512;
@@ -577,13 +571,11 @@ void Node::write_fs_block(uint32_t fs_block_num, const char* buffer) {
         ide->write_block(start_sector + i, buffer + (i * 512));
     }
     
-    // Then update cache
     if (cache) {
         cache->write(fs_block_num, buffer);
     }
 }
 
 void Node::sync() {
-    // Ide sync is empty, but if we had buffers we would flush them.
     ide->sync();
 }

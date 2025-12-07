@@ -190,7 +190,7 @@ extern "C" void vmm_pageFault(uintptr_t va_, uintptr_t *saveState)
     // saveState[9] = EIP (pushed by CPU)
     // saveState[10] = CS (pushed by CPU)
     // saveState[11] = EFLAGS (pushed by CPU)
-    Debug::printf("vmm_pageFault: va=0x%x eip=0x%x\n", va_, saveState[9]);
+    // saveState[11] = EFLAGS (pushed by CPU)
 
     auto tcb = state.current();
     ASSERT(tcb != nullptr);
@@ -199,14 +199,12 @@ extern "C" void vmm_pageFault(uintptr_t va_, uintptr_t *saveState)
 
     auto map_it = [va_, va](impl::vme::VMES &vmes, uint32_t *pd, uint32_t bits)
     {
-        Debug::printf("map_it: looking for VME for va=0x%x\n", va);
         auto vme = vmes.find(va);
         if (vme == nullptr)
         {
             Debug::panic("*** Page fault at unmapped address 0x%x\n", va_);
             return;
         }
-        Debug::printf("map_it: found VME, mapping...\n");
 
         if (va2pa(pd, va) != 0)
         {
@@ -254,14 +252,12 @@ extern "C" void vmm_pageFault(uintptr_t va_, uintptr_t *saveState)
         }
 
         map(pd, va, frame, bits);
-        Debug::printf("map_it: mapped va=0x%x to frame=0x%x\n", va, frame);
     };
 
     if ((va >= 0x80000000) && (va < 0xF0000000))
     {
         // private mapping
         map_it(tcb->vmes, tcb->pd, 7);
-        Debug::printf("vmm_pageFault: returning to eip=0x%x\n", saveState[9]);
         return;
     }
 

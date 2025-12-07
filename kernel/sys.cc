@@ -84,12 +84,11 @@ public:
 };
 
 static inline uint32_t get_arg(uint32_t *frame, int n) {
-    uint32_t *user_stack = (uint32_t*)(frame[3]); 
-    return user_stack[1 + n];
+    uint32_t *user_stack = (uint32_t*)(frame[11]); 
+    return user_stack[n];
 }
 
 extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
-    Debug::printf("sysHandler: syscall #%d\n", eax);
     
     switch (eax) {
     case 0: /* exit */
@@ -145,7 +144,7 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
             }
             return nbyte;
         }
-        
+
         if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
             auto& fde = fd_table[fd];
             int64_t written = fde.node->write(fde.offset, nbyte, buf);
@@ -278,6 +277,7 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
                 
                 *child_vme_ptr = new_vme;
                 child_vme_ptr = &new_vme->next;
+                
                 parent_vme = parent_vme->next;
             }
         }
@@ -302,17 +302,17 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
             child_tcb->stack[stack_idx--] = val;
         };
         
-        push(frame[4]);
-        push(frame[3]);
-        push(frame[2]);
-        push(frame[1]);
-        push(frame[0]);
+        push(frame[12]); // SS
+        push(frame[11]); // ESP
+        push(frame[10]); // EFLAGS
+        push(frame[9]); // CS
+        push(frame[8]); // EIP
         
         push((uint32_t)fork_child_return);
-        push(0);
-        push(0);
-        push(0);
-        push(0);
+        push(frame[4]); // EBX
+        push(frame[1]); // ESI
+        push(frame[0]); // EDI
+        push(frame[2]); // EBP
         push((uint32_t)child_tcb->pd);
         push(0);
         push(0x200);
@@ -347,7 +347,7 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
         return MAX_FDS + sem_index;
     }
     
-    case 4: /* up */
+    case 1004: /* up */
     {
         int sem_id = (int)get_arg(frame, 0);
         
@@ -362,7 +362,7 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
         return 0;
     }
     
-    case 5: /* down */
+    case 1005: /* down */
     {
         int sem_id = (int)get_arg(frame, 0);
         
@@ -427,7 +427,7 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
         return -1;
     }
     
-    case 7: /* shutdown */
+    case 1000: // shutdown
         Debug::shutdown();
         return -1;
 
@@ -1416,6 +1416,73 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
         void* ret = VMM::naive_mmap(len, shared, node, pgoff * 4096);
         if (ret == nullptr) return -1; // ENOMEM
         return (int)ret;
+    }
+
+    case 19: // lseek
+    {
+        int fd = (int)get_arg(frame, 0);
+        int offset = (int)get_arg(frame, 1);
+        int whence = (int)get_arg(frame, 2);
+        
+        if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
+            auto& fde = fd_table[fd];
+            uint32_t file_size = fde.node->size_in_bytes();
+            
+            if (whence == 0) { // SEEK_SET
+                fde.offset = offset;
+            } else if (whence == 1) { // SEEK_CUR
+                fde.offset += offset;
+            } else if (whence == 2) { // SEEK_END
+                fde.offset = file_size + offset;
+            } else {
+                return -1;
+            }
+            
+            return fde.offset;
+        }
+        return -1;
+    }
+
+    case 118: // fsync
+    {
+        int fd = (int)get_arg(frame, 0);
+        
+        if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
+            fd_table[fd].node->sync();
+            return 0;
+        }
+        return -1;
+    }
+
+    case 7: // waitpid
+    {
+        using namespace impl::threads;
+        int pid = (int)get_arg(frame, 0);
+        uint32_t* status = (uint32_t*)get_arg(frame, 1);
+        
+        if (pid < 0 || pid >= MAX_PROCESSES || pid_to_process[pid] == nullptr) return -1;
+        
+        auto child = pid_to_process[pid];
+        auto current = static_cast<UserProcessTCB*>(state.current());
+        
+        if (child->parent_thread != current) return -1;
+        
+        exit_wait_lock.lock();
+        if (child->state == PROC_ZOMBIE) {
+            if (status) *status = child->exit_status;
+            exit_wait_lock.unlock();
+            pid_to_process[pid] = nullptr;
+            return pid;
+        }
+        
+        child->waiting_parent = current;
+        exit_wait_lock.unlock();
+        
+        state.block("waitpid", [] { });
+        
+        if (status) *status = child->exit_status;
+        pid_to_process[pid] = nullptr;
+        return pid;
     }
 
     default:

@@ -62,6 +62,7 @@ namespace impl::vme {
         while ((p != nullptr) && (p->next != nullptr)) {
             auto next = p->next;
             auto hole = next->range_start - p->range_end;
+                
             if (hole >= size) {
                 auto va = p->range_end;
 

@@ -11,6 +11,10 @@ void kernelMain(void) {
     auto d = StrongPtr<Ide>::make(1,0);
     auto fs = StrongPtr<Ext2>::make(d);
     auto init = fs->find(fs->root, "/sbin/init");
+    
+    if (init == nullptr) {
+        Debug::panic("*** /sbin/init not found\n");
+    }
 
     Debug::printf("loading init\n");
     uint32_t e = ELF::load(init);

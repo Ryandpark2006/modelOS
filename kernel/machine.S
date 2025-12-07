@@ -223,11 +223,15 @@ switchToUser:
     
     .global sysHandler_
 sysHandler_:
+    pusha
     push %esp
+    mov 32(%esp), %eax
     push %eax
     .extern sysHandler
     call sysHandler
     add $8,%esp
+    mov %eax, 28(%esp)
+    popa
     iret
 
     .global fork_child_return
