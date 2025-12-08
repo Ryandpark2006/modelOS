@@ -1,0 +1,28 @@
+(1) What will you do? (1-2 paragraphs)
+
+We will implement larger Linux syscall compatibility for our operating system, expanding the current set of 17 syscalls to 50-70 
+Linux-compatible syscalls. Our implementation will focus on four main categories: 
+
+(1) file system operations including stat/fstat/lstat for file metadata, getdents for directory reading, mkdir/rmdir/unlink/rename for file 
+management, and getcwd for working directory tracking 
+(2) better process managment with getpid/getppid, waitpid with options, and process group operations
+(3) improved I/O operations including lseek (replacing our custom seek), readv/writev for scatter-gather I/O, 
+pread/pwrite for thread-safe operations, and fsync for data integrity
+(4) memory and time management including brk for program break management (enabling malloc), gettimeofday/nanosleep for time operations, 
+and mprotect for memory protection. 
+
+This will make our OS more like the x86 32 bit system. Furthermore, we will confirm the proper functioning of our implementation through the
+testing of a busybox. Specifically, I will onboard a busybox to ensure that basic syscalls essentail to a linux system are properly functioning.  
+
+
+(2) Who are the team members?
+
+Balakrishna Ravalupalli 
+
+(3) What research did you do? Links to articles, papers, etc.
+
+- https://man7.org/linux/man-pages/man2/syscalls.2.html
+- https://x86.syscall.sh/ 
+- https://elixir.bootlin.com/linux/latest/source 
+- https://pubs.opengroup.org/onlinepubs/9699919799/ 
+- https://busybox.net/
