@@ -143,6 +143,8 @@ ${TEST_RAWS} : %.raw : Makefile % %.data
 	@echo "*** failed to run, look in $*.failure for more details" > $*.raw
 	-(${TIME} --quiet -o $*.time -f "%E" ${QEMU_TIMEOUT_CMD} ${QEMU_TIMEOUT} ${QEMU_CMD} ${QEMU_FLAGS} > $*.failure 2>&1); if [ $$? -eq 124 ]; then echo "timeout" > $*.failure; echo "timeout" > $*.time; fi
 
+comprehensive_test.data : all_tests/comprehensive_test.dir/sbin/init
+
 BLOCK_SIZE = 4096
 
 ${TEST_DATA} : %.data : Makefile

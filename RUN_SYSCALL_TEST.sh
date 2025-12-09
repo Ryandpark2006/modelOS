@@ -24,7 +24,7 @@ timeout 10 qemu-system-i386 \
   -device isa-debug-exit,iobase=0xf4,iosize=0x04
 
 echo ""
-echo "✅ Test complete! Your syscalls executed successfully if you saw lines like:"
+echo "Test complete! Syscalls executed successfully if you saw lines like:"
 echo "   sysHandler: syscall #20 (getpid)"
 echo "   sysHandler: syscall #64 (getppid)"
 echo "   sysHandler: syscall #45 (brk)"

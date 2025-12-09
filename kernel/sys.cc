@@ -107,16 +107,7 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
     {
         using namespace impl::threads;
         
-        uint32_t *user_stack = (uint32_t*)(frame[3]);
-        Debug::printf("*** exit: ESP=0x%x\n", user_stack);
-        
-        // Try to read from different offsets
-        for (int i = 0; i < 10; i++) {
-            Debug::printf("  [ESP+%d] = 0x%x\n", i*4, user_stack[i]);
-        }
-        
         int rc = (int)get_arg(frame, 0);
-        Debug::printf("*** Process exiting with status %d (should be from ESP+8=user_stack[2])\n", rc);
         auto current_tcb = state.current();
         
         if (current_tcb == nullptr) {
@@ -1702,132 +1693,6 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
         }
         
         return -1;  // Failed
-    }
-
-    case 90: // mmap (old_mmap)
-    {
-        struct mmap_arg_struct {
-            uint32_t addr;
-            uint32_t len;
-            uint32_t prot;
-            uint32_t flags;
-            uint32_t fd;
-            uint32_t offset;
-        } *args = (struct mmap_arg_struct*)get_arg(frame, 0);
-        
-        if (args == nullptr) return -1;
-        
-        uint32_t len = args->len;
-        uint32_t flags = args->flags;
-        int fd = (int)args->fd;
-        uint32_t offset = args->offset;
-        
-        StrongPtr<Node> node;
-        if (!(flags & 0x20)) { // Not MAP_ANONYMOUS
-            if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
-                node = fd_table[fd].node;
-            } else {
-                return -1; // EBADF
-            }
-        }
-        
-        bool shared = (flags & 0x01); // MAP_SHARED
-        
-        void* ret = VMM::naive_mmap(len, shared, node, offset);
-        if (ret == nullptr) return -1; // ENOMEM
-        return (int)ret;
-    }
-
-    case 192: // mmap2
-    {
-        // uint32_t addr = get_arg(frame, 0); // Hint, ignored
-        uint32_t len = get_arg(frame, 1);
-        // uint32_t prot = get_arg(frame, 2);
-        uint32_t flags = get_arg(frame, 3);
-        int fd = (int)get_arg(frame, 4);
-        uint32_t pgoff = get_arg(frame, 5);
-        
-        StrongPtr<Node> node;
-        if (!(flags & 0x20)) { // Not MAP_ANONYMOUS
-            if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
-                node = fd_table[fd].node;
-            } else {
-                return -1; // EBADF
-            }
-        }
-        
-        bool shared = (flags & 0x01); // MAP_SHARED
-        
-        void* ret = VMM::naive_mmap(len, shared, node, pgoff * 4096);
-        if (ret == nullptr) return -1; // ENOMEM
-        return (int)ret;
-    }
-
-    case 19: // lseek
-    {
-        int fd = (int)get_arg(frame, 0);
-        int offset = (int)get_arg(frame, 1);
-        int whence = (int)get_arg(frame, 2);
-        
-        if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
-            auto& fde = fd_table[fd];
-            uint32_t file_size = fde.node->size_in_bytes();
-            
-            if (whence == 0) { // SEEK_SET
-                fde.offset = offset;
-            } else if (whence == 1) { // SEEK_CUR
-                fde.offset += offset;
-            } else if (whence == 2) { // SEEK_END
-                fde.offset = file_size + offset;
-            } else {
-                return -1;
-            }
-            
-            return fde.offset;
-        }
-        return -1;
-    }
-
-    case 118: // fsync
-    {
-        int fd = (int)get_arg(frame, 0);
-        
-        if (fd >= 0 && fd < MAX_FDS && fd_table[fd].in_use) {
-            fd_table[fd].node->sync();
-            return 0;
-        }
-        return -1;
-    }
-
-    case 7: // waitpid
-    {
-        using namespace impl::threads;
-        int pid = (int)get_arg(frame, 0);
-        uint32_t* status = (uint32_t*)get_arg(frame, 1);
-        
-        if (pid < 0 || pid >= MAX_PROCESSES || pid_to_process[pid] == nullptr) return -1;
-        
-        auto child = pid_to_process[pid];
-        auto current = static_cast<UserProcessTCB*>(state.current());
-        
-        if (child->parent_thread != current) return -1;
-        
-        exit_wait_lock.lock();
-        if (child->state == PROC_ZOMBIE) {
-            if (status) *status = child->exit_status;
-            exit_wait_lock.unlock();
-            pid_to_process[pid] = nullptr;
-            return pid;
-        }
-        
-        child->waiting_parent = current;
-        exit_wait_lock.unlock();
-        
-        state.block("waitpid", [] { });
-        
-        if (status) *status = child->exit_status;
-        pid_to_process[pid] = nullptr;
-        return pid;
     }
 
     case 90: // mmap (old_mmap)

@@ -5,8 +5,7 @@ iPXE (http://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+06FD0FC0+06F30FC0 CA00
 Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
 
 
-Booting from Hard Disk..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Booting from Hard Disk..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 | What just happened? Why am I here?
 | Discovering my identity and features
 |     CPUID: AuthenticAMD
@@ -22,25 +21,25 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 | physical range 0x600000 0x7fe0000
 | pitInit freq 1000Hz
 | pitInit divider 59659
-| APIT running at 1000134098Hz
-| APIT counter=1000134 for 1000Hz
+| APIT running at 1000069639Hz
+| APIT counter=1000069 for 1000Hz
 | initialize 1
 | reset 1
 |      eip:0x8000
 | initialize 2
 | reset 2
 |      eip:0x8000
-| initializing TSS:ss0 for 1
-| 1 enabling interrupts, I'm scared
-| initializing TSS:ss0 for 2
 | initialize 3
-| 2 enabling interrupts, I'm scared
 | reset 3
 |      eip:0x8000
+| initializing TSS:ss0 for 2
+| initializing TSS:ss0 for 1
+| 2 enabling interrupts, I'm scared
 | initializing TSS:ss0 for 3
 | initializing TSS:ss0 for 0
-| 3 enabling interrupts, I'm scared
+| 1 enabling interrupts, I'm scared
 | 0 enabling interrupts, I'm scared
+| 3 enabling interrupts, I'm scared
 loading init
 entry 800001e5
 user esp effffff0
