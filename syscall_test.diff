@@ -1,5 +1,0 @@
-1c1,2
-< *** can't handle page fault at 0
----
-> Starting Syscall Tests...
-> All Tests Passed!
