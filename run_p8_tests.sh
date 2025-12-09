@@ -11,7 +11,7 @@ make clean
 make
 
 if [ $? -ne 0 ]; then
-    echo "❌ Build failed!"
+    echo "Build failed!"
     exit 1
 fi
 
@@ -22,9 +22,7 @@ rm -f p8test.data
 mkfs.ext2 -q -b 4096 -i 4096 -d p8test.dir -I 128 -r 0 -t ext2 p8test.data 10m
 
 echo ""
-echo "═══════════════════════════════════════════════════════════"
-echo "🎯 Running P8 Syscall Functional Tests"
-echo "═══════════════════════════════════════════════════════════"
+echo "Running P8 Syscall Functional Tests"
 echo ""
 
 timeout 10 qemu-system-i386 \
@@ -41,6 +39,4 @@ timeout 10 qemu-system-i386 \
   -device isa-debug-exit,iobase=0xf4,iosize=0x04 2>&1 | strings | grep -E "(\*\*\*|PASS|FAIL)" | head -30
 
 echo ""
-echo "═══════════════════════════════════════════════════════════"
 echo "Test complete!"
-echo "═══════════════════════════════════════════════════════════"

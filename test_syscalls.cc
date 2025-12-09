@@ -1,11 +1,9 @@
 
-// Standalone test program for syscalls
-// Compiled with: g++ -m32 -static -nostdlib -fno-builtin -fno-rtti -fno-exceptions -o init test_syscalls.cc
+
 
 typedef unsigned int uint32_t;
 typedef int int32_t;
 
-// Syscall numbers
 #define SYS_EXIT 0
 #define SYS_WRITE 4
 #define SYS_CLOSE 6
@@ -134,7 +132,6 @@ extern "C" void _start() {
     int pid = syscall0(SYS_GETPID);
     assert(pid > 0, "getpid returned valid pid");
 
-    // Test File I/O
     int fd = syscall1(SYS_OPEN, (uint32_t)"/dummy.txt");
     print("Open fd: "); print_int(fd); print("\n");
     assert(fd >= 3, "open /dummy.txt");
@@ -147,9 +144,9 @@ extern "C" void _start() {
         print("Read: "); print(buf); print("\n");
         assert(n > 0, "read initial content");
 
-        // Write to file (overwrite beginning)
+        // Write to file
         const char* msg = "WRITE";
-        int lseek_ret = syscall3(SYS_LSEEK, fd, 0, 0); // SEEK_SET
+        int lseek_ret = syscall3(SYS_LSEEK, fd, 0, 0);
         assert(lseek_ret == 0, "lseek to 0");
         
         int written = syscall3(SYS_WRITE, fd, (uint32_t)msg, 5);
@@ -168,10 +165,7 @@ extern "C" void _start() {
         for(int i=0; i<5; i++) if(buf[i] != msg[i]) match = false;
         assert(match, "read back matches written data");
         
-        // Test mmap (MAP_PRIVATE)
-        // Map the file
-        // mmap2(addr, len, prot, flags, fd, pgoff)
-        // flags = MAP_PRIVATE (2)
+        // Test mmap
         uint32_t mmap_addr = syscall6(SYS_MMAP2, 0, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
         print("mmap addr: "); print_int((int)mmap_addr); print("\n");
         
@@ -184,11 +178,11 @@ extern "C" void _start() {
             }
             print("\n");
             
-            // Write to mmap (COW)
+            // Write to mmap
             ptr[0] = 'X';
             assert(ptr[0] == 'X', "wrote to mmap");
             
-            // Verify file did NOT change (because MAP_PRIVATE)
+            // Verify file did not check
             syscall3(SYS_LSEEK, fd, 0, 0);
             char buf2[5];
             syscall3(SYS_READ, fd, (uint32_t)buf2, 1);
@@ -196,11 +190,11 @@ extern "C" void _start() {
             syscall3(SYS_WRITE, 1, (uint32_t)buf2, 1);
             print("\n");
             
-            // Should be 'W' (from "WRITE"), not 'X'
+            // Should be W
             assert(buf2[0] == 'W', "file content unchanged (COW works)");
         } else {
             print("mmap failed\n");
-            // assert(false, "mmap failed"); // Don't fail hard if mmap not fully supported yet
+            // assert(false, "mmap failed");
         }
 
         syscall1(SYS_CLOSE, fd);

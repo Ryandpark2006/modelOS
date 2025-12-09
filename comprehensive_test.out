@@ -1,0 +1,12 @@
+*** Starting Comprehensive Test...
+*** PASS: open /dummy.txt
+*** PASS: Parent wrote to file
+*** Parent waiting for child...
+*** Child process started
+*** PASS: Child sees parent data in mmap
+*** PASS: Child modified memory
+*** PASS: File content unchanged by child memory write (MAP_PRIVATE works)
+*** Child exiting
+*** Child finished.
+*** PASS: Parent sees original file content
+*** Comprehensive Test Passed!

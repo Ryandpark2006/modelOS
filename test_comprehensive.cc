@@ -1,11 +1,8 @@
 
-// Comprehensive test for Write, Fork, and mmap (MAP_PRIVATE)
-// Compiled with: g++ -m32 -static -nostdlib -fno-builtin -fno-rtti -fno-exceptions -o init test_comprehensive.cc
 
 typedef unsigned int uint32_t;
 typedef int int32_t;
 
-// Syscall numbers
 #define SYS_EXIT 0
 #define SYS_WRITE 4
 #define SYS_CLOSE 6
@@ -29,7 +26,6 @@ typedef int int32_t;
 
 #define O_RDWR 2
 
-// Helper to make syscalls
 static inline int32_t syscall0(int num) {
     int32_t ret;
     asm volatile("int $48" : "=a"(ret) : "a"(num));
@@ -105,25 +101,25 @@ void assert(bool cond, const char* msg) {
 extern "C" void _start() {
     print("*** Starting Comprehensive Test...\n");
 
-    // 1. Open file
+    // Open file
     int fd = syscall1(SYS_OPEN, (uint32_t)"/dummy.txt");
     assert(fd >= 3, "open /dummy.txt");
 
-    // 2. Write to file
+    // Write to file
     const char* parent_msg = "PARENT_DATA";
     syscall3(SYS_LSEEK, fd, 0, 0);
     int written = syscall3(SYS_WRITE, fd, (uint32_t)parent_msg, 11);
     assert(written == 11, "Parent wrote to file");
     syscall1(SYS_FSYNC, fd);
 
-    // 3. Fork
+    // Fork
     int pid = syscall0(SYS_FORK);
     
     if (pid == 0) {
         // CHILD
         print("*** Child process started\n");
         
-        // 4. Map file MAP_PRIVATE
+        // Map file MAP_PRIVATE
         uint32_t mmap_addr = syscall6(SYS_MMAP2, 0, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
         
         if ((int32_t)mmap_addr == -1 || mmap_addr == 0) {
@@ -146,7 +142,7 @@ extern "C" void _start() {
         }
         assert(match, "Child sees parent data in mmap");
         
-        // Modify memory (COW)
+        // Modify memory
         ptr[0] = 'C';
         ptr[1] = 'H';
         ptr[2] = 'I';
@@ -172,7 +168,6 @@ extern "C" void _start() {
         syscall3(SYS_WAITPID, pid, 0, 0);
         print("*** Child finished.\n");
         
-        // Verify file content again
         char buf[16];
         syscall3(SYS_LSEEK, fd, 0, 0);
         syscall3(SYS_READ, fd, (uint32_t)buf, 11);
